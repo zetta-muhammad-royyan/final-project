@@ -13,6 +13,7 @@ module.exports = {
     },
   },
   rules: {
+    'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     quotes: ['error', 'single'],
     'no-console': 0,
     'no-async-promise-executor': 0,
