@@ -17,15 +17,39 @@ const terminationOfpayments = gql`
     percentage: Float!
   }
 
+  type TerminationOfPaymentsPaginatedResult {
+    items: [TerminationOfPayments!]!
+    total: Int!
+  }
+
   # inputs
   input TermPaymentInput {
     payment_date: String!
     percentage: Float!
   }
 
+  input TerminationOfPaymentsFilterInput {
+    description: String
+    termination: Int
+  }
+
+  input TerminationOfPaymentsSortInput {
+    description: Int
+    termination: Int
+  }
+
+  input PaginationInput {
+    page: Int!
+    limit: Int!
+  }
+
   # queries
   type Query {
-    QueryHello: String
+    GetAllTerminationOfPayments(
+      filter: TerminationOfPaymentsFilterInput
+      sort: TerminationOfPaymentsSortInput
+      pagination: PaginationInput
+    ): [TerminationOfPayments]!
   }
 
   # mutations

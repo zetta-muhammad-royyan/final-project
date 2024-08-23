@@ -9,7 +9,64 @@ const { validateTerminationOfPaymentInput } = require('../validators/termination
 
 const terminationOfPaymentsResolver = {
   // *************** Queries ***************
-  Query: {},
+  Query: {
+    /**
+     * Retrieve all TerminationOfPayments documents with optional filtering, sorting, and pagination.
+     * @param {Object} parent - Parent object, unused in this resolver.
+     * @param {Object} args - Arguments for the query.
+     * @param {Object} [args.filter] - Optional filters for the query.
+     * @param {String} [args.filter.description] - Filter by description.
+     * @param {Int} [args.filter.termination] - Filter by number of terms.
+     * @param {Object} [args.sort] - Optional sorting for the query.
+     * @param {Int} [args.sort.description] - Sort by description. 1 for ascending, -1 for descending.
+     * @param {Int} [args.sort.termination] - Sort by termination. 1 for ascending, -1 for descending.
+     * @param {Object} args.pagination - Pagination information.
+     * @param {Int} args.pagination.page - Page number.
+     * @param {Int} args.pagination.limit - Number of items per page.
+     * @returns {Promise<Object>} Paginated result with items and total count.
+     */
+    GetAllTerminationOfPayments: async (_parent, { filter, sort, pagination }) => {
+      try {
+        const { page = 1, limit = 10 } = pagination;
+
+        if (page < 1 || limit < 1) {
+          throw new Error('Page and limit must be greater than 0');
+        }
+
+        const pipeline = [];
+
+        const matchStage = {};
+        if (filter) {
+          if (filter.description) {
+            matchStage.description = { $regex: filter.description, $options: 'i' };
+          }
+          if (filter.termination !== undefined) {
+            matchStage.termination = filter.termination;
+          }
+
+          pipeline.push({ $match: matchStage });
+        }
+
+        const sortStage = {};
+        if (sort) {
+          if (sort.description !== undefined) {
+            sortStage.description = sort.description;
+          }
+          if (sort.termination !== undefined) {
+            sortStage.termination = sort.termination;
+          }
+
+          pipeline.push({ $sort: sortStage });
+        }
+
+        pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
+
+        return await TerminationOfPayments.aggregate(pipeline);
+      } catch (error) {
+        throw new Error(`Failed to fetch TerminationOfPayments: ${error.message}`);
+      }
+    },
+  },
 
   // *************** Mutations ***************
   Mutation: {
