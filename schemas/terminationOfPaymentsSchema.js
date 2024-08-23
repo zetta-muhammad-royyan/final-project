@@ -3,12 +3,34 @@ const { gql } = require('apollo-server-express');
 
 // *************** TerminationOfPayments typedef ***************
 const terminationOfpayments = gql`
+  # schemas
+  type TerminationOfPayments {
+    _id: ID!
+    description: String!
+    termination: Int!
+    term_payments: [TermPayment!]!
+    additional_cost: Float!
+  }
+
+  type TermPayment {
+    payment_date: String!
+    percentage: Float!
+  }
+
+  # inputs
+  input TermPaymentInput {
+    payment_date: String!
+    percentage: Float!
+  }
+
+  # queries
   type Query {
     QueryHello: String
   }
 
+  # mutations
   type Mutation {
-    MuatationHello: String
+    CreateTerminationOfPayment(description: String!, term_payments: [TermPaymentInput!]!, additional_cost: Float!): TerminationOfPayments!
   }
 `;
 
