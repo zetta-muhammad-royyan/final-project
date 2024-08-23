@@ -50,6 +50,7 @@ const terminationOfpayments = gql`
       sort: TerminationOfPaymentsSortInput
       pagination: PaginationInput
     ): [TerminationOfPayments]!
+    GetOneTerminationOfPayment(_id: ID!): TerminationOfPayments!
   }
 
   # mutations

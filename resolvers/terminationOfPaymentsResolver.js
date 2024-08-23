@@ -66,6 +66,30 @@ const terminationOfPaymentsResolver = {
         throw new Error(`Failed to fetch TerminationOfPayments: ${error.message}`);
       }
     },
+
+    /**
+     * Retrieve a TerminationOfPayments document by ID.
+     * @param {Object} parent - Parent object, unused in this resolver.
+     * @param {Object} args - Arguments for the query.
+     * @param {String} args._id - The ID of the TerminationOfPayments document to retrieve.
+     * @returns {Promise<TerminationOfPayments | null>} The TerminationOfPayments document or null if not found.
+     */
+    GetOneTerminationOfPayment: async (_parent, { _id }) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(_id)) {
+          throw new Error('Invalid ID format');
+        }
+
+        const terminationOfPayments = await TerminationOfPayments.findById(_id);
+        if (!terminationOfPayments) {
+          throw new Error('TerminationOfPayments not found');
+        }
+
+        return terminationOfPayments;
+      } catch (error) {
+        throw new Error(`Failed to fetch TerminationOfPayments by ID: ${error.message}`);
+      }
+    },
   },
 
   // *************** Mutations ***************
