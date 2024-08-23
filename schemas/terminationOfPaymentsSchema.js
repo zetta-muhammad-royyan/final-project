@@ -31,6 +31,12 @@ const terminationOfpayments = gql`
   # mutations
   type Mutation {
     CreateTerminationOfPayment(description: String!, term_payments: [TermPaymentInput!]!, additional_cost: Float!): TerminationOfPayments!
+    UpdateTerminationOfPayment(
+      _id: ID!
+      description: String!
+      term_payments: [TermPaymentInput!]!
+      additional_cost: Float!
+    ): TerminationOfPayments!
   }
 `;
 
