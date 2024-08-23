@@ -81,6 +81,30 @@ const terminationOfPaymentsResolver = {
         throw new Error(`Failed to update TerminationOfPayment: ${error.message}`);
       }
     },
+
+    /**
+     * Delete an existing TerminationOfPayments document.
+     * @param {Object} parent - Parent object, unused in this resolver.
+     * @param {Object} args - Arguments for the mutation.
+     * @param {String} args.id - The ID of the TerminationOfPayments document to delete.
+     * @returns {Promise<Boolean>} True if deletion was successful, false otherwise.
+     */
+    DeleteTerminationOfPayment: async (_parent, args) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(args._id)) {
+          throw new Error('Invalid ID format');
+        }
+
+        const deletedTerminationOfPayment = await TerminationOfPayments.findByIdAndDelete(args._id);
+        if (!deletedTerminationOfPayment) {
+          throw new Error('TerminationOfPayments not found');
+        }
+
+        return 'TerminationOfPayment deleted successfully';
+      } catch (error) {
+        throw new Error(`Failed to delete TerminationOfPayment: ${error.message}`);
+      }
+    },
   },
 };
 

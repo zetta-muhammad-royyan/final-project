@@ -37,6 +37,7 @@ const terminationOfpayments = gql`
       term_payments: [TermPaymentInput!]!
       additional_cost: Float!
     ): TerminationOfPayments!
+    DeleteTerminationOfPayment(_id: ID!): String
   }
 `;
 
