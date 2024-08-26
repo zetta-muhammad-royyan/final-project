@@ -44,6 +44,7 @@ const student = gql`
       financial_support: [FinancialSupportInput]
       registration_profile_id: ID!
     ): Student!
+    DeleteStudent(_id: ID!): String!
   }
 `;
 

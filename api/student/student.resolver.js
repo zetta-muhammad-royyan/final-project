@@ -101,7 +101,40 @@ const studentResolver = {
         throw new Error(`Failed to update Student: ${error.message}`);
       }
     },
+
+    /**
+     * Delete student
+     * @param {Object} _parent
+     * @param {Object} args
+     * @param {String} args._id
+     * @param {Object} context
+     * @param {Object} contex.models
+     * @returns {Promise<String>}
+     */
+    DeleteStudent: async (_parent, args, { models }) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(args._id)) {
+          throw new Error('Invalid ID format');
+        }
+
+        const deletedStudent = await models.student.findByIdAndDelete(args._id);
+        console.log(deletedStudent);
+        if (!deletedStudent) {
+          throw new Error('Student not found');
+        }
+
+        // delete student financial if any
+        if (deletedStudent.financial_support_ids.length > 0) {
+          await models.financialSupport.deleteMany({ _id: { $in: deletedStudent.financial_support_ids } });
+        }
+
+        return 'Student deleted successfully';
+      } catch (error) {
+        throw new Error(`Failed to delete Student: ${error.message}`);
+      }
+    },
   },
 };
 
+// *************** EXPORT MODULE ***************
 module.exports = studentResolver;
