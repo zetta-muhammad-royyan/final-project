@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const TerminationOfPayment = require('./termination_of_payment.model');
 
 // *************** Import helper ***************
-const { validateTerminationOfPaymentInput } = require('./termination_of_payment.helper');
+const { ValidateTerminationOfPaymentInput } = require('./termination_of_payment.helper');
 
 const terminationOfPaymentResolver = {
   // *************** Queries ***************
@@ -107,7 +107,7 @@ const terminationOfPaymentResolver = {
      */
     CreateTerminationOfPayment: async (_parent, args) => {
       try {
-        validateTerminationOfPaymentInput(args);
+        ValidateTerminationOfPaymentInput(args);
         const newTerminationOfPayment = new TerminationOfPayment({
           description: args.description,
           termination: args.term_payments.length,
@@ -135,7 +135,7 @@ const terminationOfPaymentResolver = {
      */
     UpdateTerminationOfPayment: async (_parent, args) => {
       try {
-        validateTerminationOfPaymentInput(args);
+        ValidateTerminationOfPaymentInput(args);
         if (!mongoose.Types.ObjectId.isValid(args._id)) {
           throw new Error('Invalid ID format');
         }

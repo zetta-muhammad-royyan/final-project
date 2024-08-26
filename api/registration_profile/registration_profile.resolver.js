@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const RegistrationProfile = require('./registration_profile.model');
 
 // *************** Import utils ***************
-const { isNumber, isString } = require('../../utils/primitiveTypes');
+const { IsNumber, IsString } = require('../../utils/primitiveTypes');
 
 const registrationProfileResolver = {
   Query: {
@@ -108,10 +108,10 @@ const registrationProfileResolver = {
     CreateRegistrationProfile: async (_parent, args) => {
       try {
         if (
-          !isString(args.registration_profile_name) &&
-          !isNumber(args.scholarship_fee) &&
-          !isNumber(args.deposit) &&
-          !isNumber(args.registration_fee)
+          !IsString(args.registration_profile_name) &&
+          !IsNumber(args.scholarship_fee) &&
+          !IsNumber(args.deposit) &&
+          !IsNumber(args.registration_fee)
         ) {
           throw new Error('the arguments submitted do not meet the requirements');
         }
@@ -149,10 +149,10 @@ const registrationProfileResolver = {
     UpdateRegistrationProfile: async (_parent, args) => {
       try {
         if (
-          !isString(args.registration_profile_name) &&
-          !isNumber(args.scholarship_fee) &&
-          !isNumber(args.deposit) &&
-          !isNumber(args.registration_fee)
+          !IsString(args.registration_profile_name) &&
+          !IsNumber(args.scholarship_fee) &&
+          !IsNumber(args.deposit) &&
+          !IsNumber(args.registration_fee)
         ) {
           throw new Error('the arguments submitted do not meet the requirements');
         }

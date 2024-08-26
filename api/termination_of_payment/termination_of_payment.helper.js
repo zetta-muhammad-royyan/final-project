@@ -2,7 +2,7 @@
 const moment = require('moment');
 
 // *************** Import Utils ***************
-const { isNumber, isString } = require('../../utils/primitiveTypes');
+const { IsNumber, IsString } = require('../../utils/primitiveTypes');
 
 /**
  * @param {Object} input
@@ -12,17 +12,17 @@ const { isNumber, isString } = require('../../utils/primitiveTypes');
  * @param {Float} input.term_payments.percentage - Percentage of the total fee due on this date.
  * @param {Float} input.additional_cost - Any additional fees applied.
  */
-const validateTerminationOfPaymentInput = (input) => {
+const ValidateTerminationOfPaymentInput = (input) => {
   const { description, term_payments, additional_cost } = input;
-  if (!isString(description)) {
+  if (!IsString(description)) {
     throw new Error('description must be a string');
   }
 
-  if (!isNumber(additional_cost)) {
+  if (!IsNumber(additional_cost)) {
     throw new Error('additional_cost must be a number');
   }
 
-  validateTermPayment(term_payments);
+  ValidateTermPayment(term_payments);
 };
 
 /**
@@ -30,7 +30,7 @@ const validateTerminationOfPaymentInput = (input) => {
  * @param {String} term_payments.payment_date - Payment date for a term.
  * @param {Float} term_payments.percentage - Percentage of the total fee due on this date.
  */
-const validateTermPayment = (term_payments) => {
+const ValidateTermPayment = (term_payments) => {
   if (term_payments.length < 1) {
     throw new Error('term_payments cannot be empty');
   }
@@ -49,7 +49,7 @@ const validateTermPayment = (term_payments) => {
       throw new Error('payment_date cannot be converted to date');
     }
 
-    if (!isNumber(term_payments[i].percentage)) {
+    if (!IsNumber(term_payments[i].percentage)) {
       throw new Error('percentage must be a number');
     }
   }
@@ -61,6 +61,6 @@ const validateTermPayment = (term_payments) => {
 };
 
 module.exports = {
-  validateTerminationOfPaymentInput,
-  validateTermPayment,
+  ValidateTerminationOfPaymentInput,
+  ValidateTermPayment,
 };

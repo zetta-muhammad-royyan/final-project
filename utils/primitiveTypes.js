@@ -1,12 +1,12 @@
-const isString = (input) => {
+const IsString = (input) => {
   return typeof input === 'string';
 };
 
-const isNumber = (input) => {
+const IsNumber = (input) => {
   return typeof input === 'number' && !isNaN(input);
 };
 
 module.exports = {
-  isString,
-  isNumber,
+  IsString,
+  IsNumber,
 };

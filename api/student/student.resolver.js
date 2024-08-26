@@ -2,10 +2,10 @@
 const mongoose = require('mongoose');
 
 // *************** Import helper ***************
-const { addOrReplaceFinancialSupport } = require('../financial_support/financial_support.helper');
+const { AddOrReplaceFinancialSupport } = require('../financial_support/financial_support.helper');
 
 // *************** Import utils ***************
-const { isString } = require('../../utils/primitiveTypes');
+const { IsString } = require('../../utils/primitiveTypes');
 
 const studentResolver = {
   Query: {},
@@ -28,7 +28,7 @@ const studentResolver = {
      */
     CreateStudent: async (_parent, args, { models }) => {
       try {
-        if (!isString(args.civility) && !isString(args.first_name) && !isString(args.last_name)) {
+        if (!IsString(args.civility) && !IsString(args.first_name) && !IsString(args.last_name)) {
           throw new Error('arguments not met the requirements');
         }
 
@@ -46,7 +46,7 @@ const studentResolver = {
         let createdStudent = await newStudent.save();
 
         // create financial support
-        const financialSupportIds = await addOrReplaceFinancialSupport(createdStudent, args.financial_support);
+        const financialSupportIds = await AddOrReplaceFinancialSupport(createdStudent, args.financial_support);
         createdStudent.financial_support_ids = financialSupportIds;
 
         return await createdStudent.save();
@@ -74,7 +74,7 @@ const studentResolver = {
      */
     UpdateStudent: async (_parent, args, { models }) => {
       try {
-        if (!isString(args.civility) && !isString(args.first_name) && !isString(args.last_name)) {
+        if (!IsString(args.civility) && !IsString(args.first_name) && !IsString(args.last_name)) {
           throw new Error('arguments not met the requirements');
         }
 
@@ -87,7 +87,7 @@ const studentResolver = {
         }
 
         const student = await models.student.findById(args._id);
-        const financialSupportIds = await addOrReplaceFinancialSupport(student, args.financial_support || []);
+        const financialSupportIds = await AddOrReplaceFinancialSupport(student, args.financial_support || []);
 
         // update student
         student.civility = args.civility;

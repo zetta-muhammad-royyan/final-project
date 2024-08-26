@@ -2,49 +2,49 @@
 const FinancialSupport = require('./financial_support.model');
 
 // *************** Import Utils ***************
-const { isString } = require('../../utils/primitiveTypes');
+const { IsString } = require('../../utils/primitiveTypes');
 
 /**
  * Add or replace financial support for student
  * @param {Object} student
  * @param {String} student._id
  * @param {Array<String>} student.financial_support_ids
- * @param {Array<Object>} financial_supports
+ * @param {Array<Object>} financialSupports
  * @param {String} financial_support.civility
  * @param {String} financial_support.first_name
  * @param {String} financial_support.last_name
  * @returns {Array<String>}
  */
-const addOrReplaceFinancialSupport = async (student, financial_supports = []) => {
+const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => {
   const financialSupportsData = [];
-  for (let i = 0; i < financial_supports.length; i++) {
+  for (let i = 0; i < financialSupports.length; i++) {
     if (
-      !isString(financial_supports[i].civility) ||
-      !isString(financial_supports[i].first_name) ||
-      !isString(financial_supports[i].last_name)
+      !IsString(financialSupports[i].civility) ||
+      !IsString(financialSupports[i].first_name) ||
+      !IsString(financialSupports[i].last_name)
     ) {
       throw new Error('arguments not met the requirements');
     }
 
-    if (!['mr', 'mrs', 'neutral'].includes(financial_supports[i].civility.toLocaleLowerCase())) {
+    if (!['mr', 'mrs', 'neutral'].includes(financialSupports[i].civility.toLocaleLowerCase())) {
       throw new Error('the civility must be mr, mrs or neutral');
     }
 
     financialSupportsData.push({
-      civility: financial_supports[i].civility,
-      first_name: financial_supports[i].first_name,
-      last_name: financial_supports[i].last_name,
+      civility: financialSupports[i].civility,
+      first_name: financialSupports[i].first_name,
+      last_name: financialSupports[i].last_name,
       student_id: student._id,
     });
   }
 
   // delete existing financial support if any
-  if (student.financial_support_ids.length != 0 && financial_supports.length != 0) {
+  if (student.financial_support_ids.length != 0 && financialSupports.length != 0) {
     await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
   }
 
   // student didnt change their financial supports
-  if (student.financial_support_ids.length > 0 && financial_supports.length === 0) {
+  if (student.financial_support_ids.length > 0 && financialSupports.length === 0) {
     return student.financial_support_ids;
   }
 
@@ -53,5 +53,5 @@ const addOrReplaceFinancialSupport = async (student, financial_supports = []) =>
 };
 
 module.exports = {
-  addOrReplaceFinancialSupport,
+  AddOrReplaceFinancialSupport,
 };
