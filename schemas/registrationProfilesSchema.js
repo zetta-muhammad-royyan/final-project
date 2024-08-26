@@ -20,7 +20,7 @@ const registrationProfiles = gql`
       deposit: Float!
       registration_fee: Float!
       termination_of_payment_id: String!
-    ): RegistrationProfiles
+    ): RegistrationProfiles!
     UpdateRegistrationProfile(
       _id: ID!
       registration_profile_name: String!
@@ -28,7 +28,8 @@ const registrationProfiles = gql`
       deposit: Float!
       registration_fee: Float!
       termination_of_payment_id: String!
-    ): RegistrationProfiles
+    ): RegistrationProfiles!
+    DeleteRegistrationProfile(_id: ID!): String
   }
 `;
 

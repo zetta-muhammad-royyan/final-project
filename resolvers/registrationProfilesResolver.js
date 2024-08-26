@@ -19,22 +19,23 @@ const registrationProfilesResolver = {
      * @param {Float} args.deposit
      * @param {Float} args.registration_fee
      * @param {String} args.termination_of_payment_id
+     * @returns {Promise<Object>}
      */
     CreateRegistrationProfile: async (_parent, args) => {
-      if (
-        !isString(args.registration_profile_name) &&
-        !isNumber(args.scholarship_fee) &&
-        !isNumber(args.deposit) &&
-        !isNumber(args.registration_fee)
-      ) {
-        throw new Error('the arguments submitted do not meet the requirements');
-      }
-
-      if (!mongoose.Types.ObjectId.isValid(args.termination_of_payment_id)) {
-        throw new Error('Invalid ID format');
-      }
-
       try {
+        if (
+          !isString(args.registration_profile_name) &&
+          !isNumber(args.scholarship_fee) &&
+          !isNumber(args.deposit) &&
+          !isNumber(args.registration_fee)
+        ) {
+          throw new Error('the arguments submitted do not meet the requirements');
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(args.termination_of_payment_id)) {
+          throw new Error('Invalid ID format');
+        }
+
         const newRegistrationProfile = new RegistrationProfiles({
           registration_profile_name: args.registration_profile_name,
           scholarship_fee: args.scholarship_fee,
@@ -59,22 +60,23 @@ const registrationProfilesResolver = {
      * @param {Float} args.deposit
      * @param {Float} args.registration_fee
      * @param {String} args.termination_of_payment_id
+     * @returns {Promise<Object>}
      */
     UpdateRegistrationProfile: async (_parent, args) => {
-      if (
-        !isString(args.registration_profile_name) &&
-        !isNumber(args.scholarship_fee) &&
-        !isNumber(args.deposit) &&
-        !isNumber(args.registration_fee)
-      ) {
-        throw new Error('the arguments submitted do not meet the requirements');
-      }
-
-      if (!mongoose.Types.ObjectId.isValid(args._id)) {
-        throw new Error('Invalid ID format');
-      }
-
       try {
+        if (
+          !isString(args.registration_profile_name) &&
+          !isNumber(args.scholarship_fee) &&
+          !isNumber(args.deposit) &&
+          !isNumber(args.registration_fee)
+        ) {
+          throw new Error('the arguments submitted do not meet the requirements');
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(args._id)) {
+          throw new Error('Invalid ID format');
+        }
+
         const updatedRegistrationProfiles = await RegistrationProfiles.findByIdAndUpdate(
           args._id,
           {
@@ -92,6 +94,30 @@ const registrationProfilesResolver = {
         return updatedRegistrationProfiles;
       } catch (error) {
         throw new Error(`Failed to update RegistrationProfiles: ${error.message}`);
+      }
+    },
+
+    /**
+     * Delete RegistrationProfiles documnent
+     * @param {Object} _parent
+     * @param {Object} args
+     * @param {String} args._id
+     * @returns {Promise<Object>}
+     */
+    DeleteRegistrationProfile: async (_parent, args) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(args._id)) {
+          throw new Error('Invalid ID format');
+        }
+
+        const deletedRegistrationProfiles = await RegistrationProfiles.findByIdAndDelete(args._id);
+        if (!deletedRegistrationProfiles) {
+          throw new Error('RegistrationProfiles not found');
+        }
+
+        return 'RegistrationProfiles deleted successfully';
+      } catch (error) {
+        throw new Error(`Failed to delete RegistrationProfiles: ${error.message}`);
       }
     },
   },
