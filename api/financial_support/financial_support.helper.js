@@ -15,12 +15,7 @@ const { isString } = require('../../utils/primitiveTypes');
  * @param {String} financial_support.last_name
  * @returns {Array<String>}
  */
-const addOrReplaceFinancialSupport = async (student, financial_supports) => {
-  // delete existing financial support if any
-  if (student.financial_support_ids.length != 0) {
-    await FinancialSupport.deleteMany({ id: { $in: student.financial_support_ids } });
-  }
-
+const addOrReplaceFinancialSupport = async (student, financial_supports = []) => {
   const financialSupportsData = [];
   for (let i = 0; i < financial_supports.length; i++) {
     if (
@@ -41,6 +36,16 @@ const addOrReplaceFinancialSupport = async (student, financial_supports) => {
       last_name: financial_supports[i].last_name,
       student_id: student._id,
     });
+  }
+
+  // delete existing financial support if any
+  if (student.financial_support_ids.length != 0 && financial_supports.length != 0) {
+    await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
+  }
+
+  // student didnt change their financial supports
+  if (student.financial_support_ids.length > 0 && financial_supports.length === 0) {
+    return student.financial_support_ids;
   }
 
   const newFinancialSupports = await FinancialSupport.insertMany(financialSupportsData);

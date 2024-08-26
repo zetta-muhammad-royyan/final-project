@@ -36,6 +36,14 @@ const student = gql`
       financial_support: [FinancialSupportInput]!
       registration_profile_id: ID!
     ): Student!
+    UpdateStudent(
+      _id: ID!
+      civility: String!
+      first_name: String!
+      last_name: String
+      financial_support: [FinancialSupportInput]
+      registration_profile_id: ID!
+    ): Student!
   }
 `;
 
