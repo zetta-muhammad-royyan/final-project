@@ -2,10 +2,10 @@
 const mongoose = require('mongoose');
 
 // *************** Import module ***************
-const RegistrationProfiles = require('../models/registrationProfiles');
+const RegistrationProfiles = require('./registration_profile.model');
 
 // *************** Import utils ***************
-const { isNumber, isString } = require('../utils/primitiveTypes');
+const { isNumber, isString } = require('../../utils/primitiveTypes');
 
 const registrationProfilesResolver = {
   Query: {

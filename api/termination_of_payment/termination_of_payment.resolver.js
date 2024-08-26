@@ -2,10 +2,10 @@
 const mongoose = require('mongoose');
 
 // *************** Import module ***************
-const TerminationOfPayments = require('../models/terminationOfPayments');
+const TerminationOfPayments = require('./termination_of_payment.model');
 
-// *************** Import validator ***************
-const { validateTerminationOfPaymentInput } = require('../validators/terminationOfPaymentsValidator');
+// *************** Import helper ***************
+const { validateTerminationOfPaymentInput } = require('./termination_of_payment.helper');
 
 const terminationOfPaymentsResolver = {
   // *************** Queries ***************

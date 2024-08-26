@@ -17,11 +17,6 @@ const terminationOfpayments = gql`
     percentage: Float!
   }
 
-  type TerminationOfPaymentsPaginatedResult {
-    items: [TerminationOfPayments!]!
-    total: Int!
-  }
-
   # inputs
   input TermPaymentInput {
     payment_date: String!

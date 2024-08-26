@@ -2,7 +2,7 @@
 const moment = require('moment');
 
 // *************** Import Utils ***************
-const { isNumber, isString } = require('../utils/primitiveTypes');
+const { isNumber, isString } = require('../../utils/primitiveTypes');
 
 /**
  * @param {Object} input

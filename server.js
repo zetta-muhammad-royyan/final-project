@@ -6,8 +6,7 @@ const { makeExecutableSchema } = require('graphql-tools');
 const mongoose = require('mongoose');
 
 // *************** Import Module ***************
-const typeDefs = require('./typeDefs');
-const resolvers = require('./resolvers');
+const graphqlConfig = require('./graphql.config');
 
 // *************** Connect to mongodb ***************
 mongoose
@@ -22,10 +21,14 @@ mongoose.set('debug', process.env.DB_DEBUG || false);
 
 const app = express();
 
-const schema = makeExecutableSchema({ typeDefs, resolvers });
+const schema = makeExecutableSchema({
+  typeDefs: graphqlConfig.typeDefs,
+  resolvers: graphqlConfig.resolvers,
+});
 
 const server = new ApolloServer({
   schema,
+  ...graphqlConfig.context,
 });
 
 server.applyMiddleware({ app });
