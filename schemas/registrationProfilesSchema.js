@@ -12,6 +12,31 @@ const registrationProfiles = gql`
     termination_of_payment_id: ID!
   }
 
+  # Inputs
+  input RegistrationProfilesFilterInput {
+    registration_profile_name: String
+    termination_of_payment_id: String
+  }
+
+  input RegistrationProfilesSortingInput {
+    registration_profile_name: String
+    termination_of_payment_id: String
+  }
+
+  input RegistrationProfilesPaginationInput {
+    page: Int!
+    limit: Int!
+  }
+
+  # Queries
+  type Query {
+    GetAllRegistrationProfiles(
+      pagination: RegistrationProfilesPaginationInput!
+      filter: RegistrationProfilesFilterInput
+      sort: RegistrationProfilesSortingInput
+    ): [RegistrationProfiles]!
+  }
+
   #   Mutations
   type Mutation {
     CreateRegistrationProfile(

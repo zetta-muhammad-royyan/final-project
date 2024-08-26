@@ -8,7 +8,63 @@ const RegistrationProfiles = require('../models/registrationProfiles');
 const { isNumber, isString } = require('../utils/primitiveTypes');
 
 const registrationProfilesResolver = {
-  Query: {},
+  Query: {
+    /**
+     * Retrieve all RegistrationProfiles with optional filter and sorting
+     * @param {Object} _parent
+     * @param {Object} args
+     * @param {Object} args.filter
+     * @param {String} args.filter.registration_profile_name
+     * @param {String} args.filter.termination_of_payment_id
+     * @param {Object} args.sort
+     * @param {String} args.sort.registration_profile_name
+     * @param {String} args.sort.termination_of_payment_id
+     * @param {Object} args.pagination
+     * @param {Int} args.pagination.page
+     * @param {Int} args.pagination.limit
+     * @returns {Promise<Object>}
+     */
+    GetAllRegistrationProfiles: async (_parent, { filter, sort, pagination }) => {
+      try {
+        const { page = 1, limit = 10 } = pagination;
+        if (page < 1 || limit < 1) {
+          throw new Error('Page and limit must be greater than 0');
+        }
+
+        const pipeline = [];
+
+        const matchStage = {};
+        if (filter) {
+          if (filter.registration_profile_name !== undefined) {
+            matchStage.registration_profile_name = { $regex: filter.registration_profile_name, $options: 'i' };
+          }
+          if (filter.termination_of_payment_id !== undefined) {
+            matchStage.termination_of_payment_id = filter.termination_of_payment_id;
+          }
+
+          pipeline.push({ $match: matchStage });
+        }
+
+        const sortStage = {};
+        if (sort) {
+          if (sort.registration_profile_name !== undefined) {
+            sortStage.registration_profile_name = sort.registration_profile_name;
+          }
+          if (sort.termination_of_payment_id !== undefined) {
+            sortStage.termination_of_payment_id = sort.termination_of_payment_id;
+          }
+
+          pipeline.push({ $sort: sortStage });
+        }
+
+        pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
+
+        return await RegistrationProfiles.aggregate(pipeline);
+      } catch (error) {
+        throw new Error(`Failed to fetch RegistrationProfiles: ${error.message}`);
+      }
+    },
+  },
   Mutation: {
     /**
      * Create new RegistrationProfiles document
