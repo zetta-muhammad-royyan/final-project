@@ -8,6 +8,7 @@ const RegistrationProfile = require('./registration_profile.model');
 const { IsNumber, IsString } = require('../../utils/primitiveTypes');
 
 const registrationProfileResolver = {
+  // *************** Query ***************
   Query: {
     /**
      * Retrieve all RegistrationProfiles with optional filter and sorting
@@ -93,6 +94,8 @@ const registrationProfileResolver = {
       }
     },
   },
+
+  // *************** Mutation ***************
   Mutation: {
     /**
      * Create new RegistrationProfiles document
@@ -207,4 +210,5 @@ const registrationProfileResolver = {
   },
 };
 
+// *************** EXPORT MODULE ***************
 module.exports = registrationProfileResolver;

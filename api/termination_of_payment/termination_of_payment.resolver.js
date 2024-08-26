@@ -1,14 +1,14 @@
-// *************** Import library ***************
+// *************** IMPORT LIBRARY ***************
 const mongoose = require('mongoose');
 
-// *************** Import module ***************
+// *************** IMPORT MODULE ***************
 const TerminationOfPayment = require('./termination_of_payment.model');
 
-// *************** Import helper ***************
+// *************** IMPORT HELPER FUNCTION ***************
 const { ValidateTerminationOfPaymentInput } = require('./termination_of_payment.helper');
 
 const terminationOfPaymentResolver = {
-  // *************** Queries ***************
+  // *************** Query ***************
   Query: {
     /**
      * Retrieve all TerminationOfPayments documents with optional filtering, sorting, and pagination.
@@ -92,7 +92,7 @@ const terminationOfPaymentResolver = {
     },
   },
 
-  // *************** Mutations ***************
+  // *************** Mutation ***************
   Mutation: {
     /**
      * Create a new TerminationOfPayments document.
@@ -189,4 +189,5 @@ const terminationOfPaymentResolver = {
   },
 };
 
+// *************** EXPORT MODULE ***************
 module.exports = terminationOfPaymentResolver;

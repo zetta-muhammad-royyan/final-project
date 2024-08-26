@@ -1,7 +1,7 @@
-// *************** Import module ***************
+// *************** IMPORT MODULE ***************
 const FinancialSupport = require('./financial_support.model');
 
-// *************** Import Utils ***************
+// *************** IMPORT UTILITIES ***************
 const { IsString } = require('../../utils/primitiveTypes');
 
 /**
@@ -17,6 +17,8 @@ const { IsString } = require('../../utils/primitiveTypes');
  */
 const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => {
   const financialSupportsData = [];
+
+  // *************** loop all FinancialSupport and do checking ***************
   for (let i = 0; i < financialSupports.length; i++) {
     if (
       !IsString(financialSupports[i].civility) ||
@@ -38,20 +40,23 @@ const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => 
     });
   }
 
-  // delete existing financial support if any
+  // *************** delete existing financial support if any ***************
   if (student.financial_support_ids.length != 0 && financialSupports.length != 0) {
     await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
   }
 
-  // student didnt change their financial supports
+  // *************** student didnt change their financial supports ***************
   if (student.financial_support_ids.length > 0 && financialSupports.length === 0) {
     return student.financial_support_ids;
   }
 
   const newFinancialSupports = await FinancialSupport.insertMany(financialSupportsData);
+
+  // *************** return the ids FinancialSupport that just created ***************
   return newFinancialSupports.map((fs) => fs._id);
 };
 
+// *************** EXPORT MODULE ***************
 module.exports = {
   AddOrReplaceFinancialSupport,
 };

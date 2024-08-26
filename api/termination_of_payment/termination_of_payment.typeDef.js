@@ -1,4 +1,4 @@
-// *************** Import Library ***************
+// *************** IMPORT LIBRARY ***************
 const { gql } = require('apollo-server-express');
 
 // *************** TerminationOfPayments typedef ***************
@@ -61,4 +61,5 @@ const terminationOfpayment = gql`
   }
 `;
 
+// *************** EXPORT MODULE ***************
 module.exports = terminationOfpayment;

@@ -1,4 +1,4 @@
-// *************** Import Library ***************
+// *************** IMPORT LIBRARY ***************
 const mongoose = require('mongoose');
 
 const financialSupportSchema = new mongoose.Schema({
@@ -23,4 +23,6 @@ const financialSupportSchema = new mongoose.Schema({
 });
 
 const FinancialSupport = mongoose.model('FinancialSupport', financialSupportSchema, 'financial_supports');
+
+// *************** EXPORT MODULE ***************
 module.exports = FinancialSupport;

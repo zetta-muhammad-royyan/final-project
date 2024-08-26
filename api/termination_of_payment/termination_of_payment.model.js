@@ -1,3 +1,4 @@
+// *************** IMPORT LIBRARY ***************
 const mongoose = require('mongoose');
 
 const terminationOfPaymentSchema = new mongoose.Schema({
@@ -29,4 +30,5 @@ const terminationOfPaymentSchema = new mongoose.Schema({
 
 const TerminationOfPayment = mongoose.model('TerminationOfPayment', terminationOfPaymentSchema, 'termination_of_payments');
 
+// *************** EXPORT MODULE ***************
 module.exports = TerminationOfPayment;

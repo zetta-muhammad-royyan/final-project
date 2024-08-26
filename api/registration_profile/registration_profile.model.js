@@ -1,3 +1,4 @@
+// *************** IMPORT LIBRARY ***************
 const mongoose = require('mongoose');
 
 const registrationProfileSchema = new mongoose.Schema({
@@ -26,4 +27,5 @@ const registrationProfileSchema = new mongoose.Schema({
 
 const RegistrationProfile = mongoose.model('RegistrationProfile', registrationProfileSchema, 'registration_profiles');
 
+// *************** EXPORT MODULE ***************
 module.exports = RegistrationProfile;

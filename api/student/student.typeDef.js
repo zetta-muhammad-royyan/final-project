@@ -1,4 +1,4 @@
-// *************** Import Library ***************
+// *************** IMPORT LIBRARY ***************
 const { gql } = require('apollo-server-express');
 
 const student = gql`
@@ -48,4 +48,5 @@ const student = gql`
   }
 `;
 
+// *************** EXPORT MODULE ***************
 module.exports = student;

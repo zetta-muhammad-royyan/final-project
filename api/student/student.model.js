@@ -1,4 +1,4 @@
-// *************** Import Library ***************
+// *************** IMPORT LIBRARY ***************
 const mongoose = require('mongoose');
 
 const studentSchema = new mongoose.Schema({
@@ -30,4 +30,6 @@ const studentSchema = new mongoose.Schema({
 });
 
 const Student = mongoose.model('Student', studentSchema, 'students');
+
+// *************** EXPORT MODULE ***************
 module.exports = Student;

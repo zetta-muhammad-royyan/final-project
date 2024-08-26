@@ -1,4 +1,4 @@
-// *************** Import Library ***************
+// *************** IMPORT LIBRARY ***************
 const { gql } = require('apollo-server-express');
 
 const registrationProfiles = gql`
@@ -59,4 +59,5 @@ const registrationProfiles = gql`
   }
 `;
 
+// *************** EXPORT MODULE ***************
 module.exports = registrationProfiles;

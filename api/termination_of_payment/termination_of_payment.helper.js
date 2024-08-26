@@ -1,7 +1,7 @@
-// *************** Import Library ***************
+// *************** IMPORT LIBRARY ***************
 const moment = require('moment');
 
-// *************** Import Utils ***************
+// *************** IMPORT UTILITIES ***************
 const { IsNumber, IsString } = require('../../utils/primitiveTypes');
 
 /**
@@ -60,6 +60,7 @@ const ValidateTermPayment = (term_payments) => {
   }
 };
 
+// *************** EXPORT MODULE ***************
 module.exports = {
   ValidateTerminationOfPaymentInput,
   ValidateTermPayment,

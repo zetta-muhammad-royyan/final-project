@@ -1,12 +1,13 @@
-// *************** Import library ***************
+// *************** IMPORT LIBRARY ***************
 const { mergeTypeDefs } = require('@graphql-tools/merge');
 
-// *************** Import Module ***************
+// *************** IMPORT MODULE ***************
 const terminationOfPayment = require('./api/termination_of_payment');
 const registrationProfile = require('./api/registration_profile');
 const financialSupport = require('./api/financial_support');
 const student = require('./api/student');
 
+// *************** EXPORT MODULE ***************
 module.exports = {
   resolvers: [terminationOfPayment.resolver, registrationProfile.resolver, student.resolver],
   typeDefs: mergeTypeDefs([terminationOfPayment.typeDef, registrationProfile.typeDef, student.typeDef]),

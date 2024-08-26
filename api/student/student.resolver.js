@@ -1,14 +1,17 @@
-// *************** Import library ***************
+// *************** IMPORT LIBRARY ***************
 const mongoose = require('mongoose');
 
-// *************** Import helper ***************
+// *************** IMPORT HELPER FUNCTION ***************
 const { AddOrReplaceFinancialSupport } = require('../financial_support/financial_support.helper');
 
-// *************** Import utils ***************
+// *************** IMPORT UTILITIES ***************
 const { IsString } = require('../../utils/primitiveTypes');
 
 const studentResolver = {
+  // *************** Query ***************
   Query: {},
+
+  // *************** Mutation ***************
   Mutation: {
     /**
      * Create new Student
@@ -45,8 +48,10 @@ const studentResolver = {
 
         let createdStudent = await newStudent.save();
 
-        // create financial support
+        // *************** Create Financial Support ***************
         const financialSupportIds = await AddOrReplaceFinancialSupport(createdStudent, args.financial_support);
+
+        // *************** Update student financial_support_ids with new one ***************
         createdStudent.financial_support_ids = financialSupportIds;
 
         return await createdStudent.save();
@@ -89,7 +94,7 @@ const studentResolver = {
         const student = await models.student.findById(args._id);
         const financialSupportIds = await AddOrReplaceFinancialSupport(student, args.financial_support || []);
 
-        // update student
+        // *************** Update student with new data ***************
         student.civility = args.civility;
         student.first_name = args.first_name;
         student.last_name = args.last_name;
@@ -123,7 +128,7 @@ const studentResolver = {
           throw new Error('Student not found');
         }
 
-        // delete student financial if any
+        // *************** Delete student financial supports if any ***************
         if (deletedStudent.financial_support_ids.length > 0) {
           await models.financialSupport.deleteMany({ _id: { $in: deletedStudent.financial_support_ids } });
         }
