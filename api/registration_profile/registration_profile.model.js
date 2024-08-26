@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const registrationProfilesSchema = new mongoose.Schema({
+const registrationProfileSchema = new mongoose.Schema({
   registration_profile_name: {
     type: String,
     required: true,
@@ -19,11 +19,11 @@ const registrationProfilesSchema = new mongoose.Schema({
   },
   termination_of_payment_id: {
     type: mongoose.Schema.Types.ObjectID,
-    ref: 'terminationofpayments',
+    ref: 'termination_of_payments',
     required: true,
   },
 });
 
-const RegistrationProfiles = mongoose.model('RegistrationProfiles', registrationProfilesSchema);
+const RegistrationProfile = mongoose.model('RegistrationProfile', registrationProfileSchema, 'registration_profiles');
 
-module.exports = RegistrationProfiles;
+module.exports = RegistrationProfile;

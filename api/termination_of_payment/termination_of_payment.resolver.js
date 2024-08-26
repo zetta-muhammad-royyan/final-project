@@ -2,12 +2,12 @@
 const mongoose = require('mongoose');
 
 // *************** Import module ***************
-const TerminationOfPayments = require('./termination_of_payment.model');
+const TerminationOfPayment = require('./termination_of_payment.model');
 
 // *************** Import helper ***************
 const { validateTerminationOfPaymentInput } = require('./termination_of_payment.helper');
 
-const terminationOfPaymentsResolver = {
+const terminationOfPaymentResolver = {
   // *************** Queries ***************
   Query: {
     /**
@@ -61,7 +61,7 @@ const terminationOfPaymentsResolver = {
 
         pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
 
-        return await TerminationOfPayments.aggregate(pipeline);
+        return await TerminationOfPayment.aggregate(pipeline);
       } catch (error) {
         throw new Error(`Failed to fetch TerminationOfPayments: ${error.message}`);
       }
@@ -80,7 +80,7 @@ const terminationOfPaymentsResolver = {
           throw new Error('Invalid ID format');
         }
 
-        const terminationOfPayments = await TerminationOfPayments.findById(_id);
+        const terminationOfPayments = await TerminationOfPayment.findById(_id);
         if (!terminationOfPayments) {
           throw new Error('TerminationOfPayments not found');
         }
@@ -108,7 +108,7 @@ const terminationOfPaymentsResolver = {
     CreateTerminationOfPayment: async (_parent, args) => {
       try {
         validateTerminationOfPaymentInput(args);
-        const newTerminationOfPayment = new TerminationOfPayments({
+        const newTerminationOfPayment = new TerminationOfPayment({
           description: args.description,
           termination: args.term_payments.length,
           term_payments: args.term_payments,
@@ -140,7 +140,7 @@ const terminationOfPaymentsResolver = {
           throw new Error('Invalid ID format');
         }
 
-        const updatedTerminationOfPayment = await TerminationOfPayments.findByIdAndUpdate(
+        const updatedTerminationOfPayment = await TerminationOfPayment.findByIdAndUpdate(
           args._id,
           {
             $set: {
@@ -176,7 +176,7 @@ const terminationOfPaymentsResolver = {
           throw new Error('Invalid ID format');
         }
 
-        const deletedTerminationOfPayment = await TerminationOfPayments.findByIdAndDelete(args._id);
+        const deletedTerminationOfPayment = await TerminationOfPayment.findByIdAndDelete(args._id);
         if (!deletedTerminationOfPayment) {
           throw new Error('TerminationOfPayments not found');
         }
@@ -189,4 +189,4 @@ const terminationOfPaymentsResolver = {
   },
 };
 
-module.exports = terminationOfPaymentsResolver;
+module.exports = terminationOfPaymentResolver;

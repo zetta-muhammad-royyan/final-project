@@ -2,12 +2,12 @@
 const mongoose = require('mongoose');
 
 // *************** Import module ***************
-const RegistrationProfiles = require('./registration_profile.model');
+const RegistrationProfile = require('./registration_profile.model');
 
 // *************** Import utils ***************
 const { isNumber, isString } = require('../../utils/primitiveTypes');
 
-const registrationProfilesResolver = {
+const registrationProfileResolver = {
   Query: {
     /**
      * Retrieve all RegistrationProfiles with optional filter and sorting
@@ -59,7 +59,7 @@ const registrationProfilesResolver = {
 
         pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
 
-        return await RegistrationProfiles.aggregate(pipeline);
+        return await RegistrationProfile.aggregate(pipeline);
       } catch (error) {
         throw new Error(`Failed to fetch RegistrationProfiles: ${error.message}`);
       }
@@ -92,7 +92,7 @@ const registrationProfilesResolver = {
           throw new Error('Invalid ID format');
         }
 
-        const newRegistrationProfile = new RegistrationProfiles({
+        const newRegistrationProfile = new RegistrationProfile({
           registration_profile_name: args.registration_profile_name,
           scholarship_fee: args.scholarship_fee,
           deposit: args.deposit,
@@ -133,7 +133,7 @@ const registrationProfilesResolver = {
           throw new Error('Invalid ID format');
         }
 
-        const updatedRegistrationProfiles = await RegistrationProfiles.findByIdAndUpdate(
+        const updatedRegistrationProfiles = await RegistrationProfile.findByIdAndUpdate(
           args._id,
           {
             $set: {
@@ -166,7 +166,7 @@ const registrationProfilesResolver = {
           throw new Error('Invalid ID format');
         }
 
-        const deletedRegistrationProfiles = await RegistrationProfiles.findByIdAndDelete(args._id);
+        const deletedRegistrationProfiles = await RegistrationProfile.findByIdAndDelete(args._id);
         if (!deletedRegistrationProfiles) {
           throw new Error('RegistrationProfiles not found');
         }
@@ -179,4 +179,4 @@ const registrationProfilesResolver = {
   },
 };
 
-module.exports = registrationProfilesResolver;
+module.exports = registrationProfileResolver;

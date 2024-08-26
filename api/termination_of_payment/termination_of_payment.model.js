@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const terminationOfPaymentsSchema = new mongoose.Schema({
+const terminationOfPaymentSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
@@ -27,6 +27,6 @@ const terminationOfPaymentsSchema = new mongoose.Schema({
   },
 });
 
-const TerminationOfPayments = mongoose.model('TerminationOfPayments', terminationOfPaymentsSchema);
+const TerminationOfPayment = mongoose.model('TerminationOfPayment', terminationOfPaymentSchema, 'termination_of_payments');
 
-module.exports = TerminationOfPayments;
+module.exports = TerminationOfPayment;

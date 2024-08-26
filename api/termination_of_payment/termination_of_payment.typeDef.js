@@ -2,9 +2,9 @@
 const { gql } = require('apollo-server-express');
 
 // *************** TerminationOfPayments typedef ***************
-const terminationOfpayments = gql`
+const terminationOfpayment = gql`
   # schemas
-  type TerminationOfPayments {
+  type TerminationOfPayment {
     _id: ID!
     description: String!
     termination: Int!
@@ -23,12 +23,12 @@ const terminationOfpayments = gql`
     percentage: Float!
   }
 
-  input TerminationOfPaymentsFilterInput {
+  input TerminationOfPaymentFilterInput {
     description: String
     termination: Int
   }
 
-  input TerminationOfPaymentsSortInput {
+  input TerminationOfPaymentSortInput {
     description: Int
     termination: Int
   }
@@ -41,24 +41,24 @@ const terminationOfpayments = gql`
   # queries
   type Query {
     GetAllTerminationOfPayments(
-      filter: TerminationOfPaymentsFilterInput
-      sort: TerminationOfPaymentsSortInput
+      filter: TerminationOfPaymentFilterInput
+      sort: TerminationOfPaymentSortInput
       pagination: PaginationInput
-    ): [TerminationOfPayments]!
-    GetOneTerminationOfPayment(_id: ID!): TerminationOfPayments!
+    ): [TerminationOfPayment]!
+    GetOneTerminationOfPayment(_id: ID!): TerminationOfPayment!
   }
 
   # mutations
   type Mutation {
-    CreateTerminationOfPayment(description: String!, term_payments: [TermPaymentInput!]!, additional_cost: Float!): TerminationOfPayments!
+    CreateTerminationOfPayment(description: String!, term_payments: [TermPaymentInput!]!, additional_cost: Float!): TerminationOfPayment!
     UpdateTerminationOfPayment(
       _id: ID!
       description: String!
       term_payments: [TermPaymentInput!]!
       additional_cost: Float!
-    ): TerminationOfPayments!
+    ): TerminationOfPayment!
     DeleteTerminationOfPayment(_id: ID!): String
   }
 `;
 
-module.exports = terminationOfpayments;
+module.exports = terminationOfpayment;

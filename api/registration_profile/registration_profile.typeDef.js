@@ -3,7 +3,7 @@ const { gql } = require('apollo-server-express');
 
 const registrationProfiles = gql`
   # Schemas
-  type RegistrationProfiles {
+  type RegistrationProfile {
     _id: ID!
     registration_profile_name: String!
     scholarship_fee: Float!
@@ -13,17 +13,17 @@ const registrationProfiles = gql`
   }
 
   # Inputs
-  input RegistrationProfilesFilterInput {
+  input RegistrationProfileFilterInput {
     registration_profile_name: String
     termination_of_payment_id: String
   }
 
-  input RegistrationProfilesSortingInput {
+  input RegistrationProfileSortingInput {
     registration_profile_name: String
     termination_of_payment_id: String
   }
 
-  input RegistrationProfilesPaginationInput {
+  input RegistrationProfilePaginationInput {
     page: Int!
     limit: Int!
   }
@@ -31,10 +31,10 @@ const registrationProfiles = gql`
   # Queries
   type Query {
     GetAllRegistrationProfiles(
-      pagination: RegistrationProfilesPaginationInput!
-      filter: RegistrationProfilesFilterInput
-      sort: RegistrationProfilesSortingInput
-    ): [RegistrationProfiles]!
+      pagination: RegistrationProfilePaginationInput!
+      filter: RegistrationProfileFilterInput
+      sort: RegistrationProfileSortingInput
+    ): [RegistrationProfile]!
   }
 
   #   Mutations
@@ -45,7 +45,7 @@ const registrationProfiles = gql`
       deposit: Float!
       registration_fee: Float!
       termination_of_payment_id: String!
-    ): RegistrationProfiles!
+    ): RegistrationProfile!
     UpdateRegistrationProfile(
       _id: ID!
       registration_profile_name: String!
@@ -53,7 +53,7 @@ const registrationProfiles = gql`
       deposit: Float!
       registration_fee: Float!
       termination_of_payment_id: String!
-    ): RegistrationProfiles!
+    ): RegistrationProfile!
     DeleteRegistrationProfile(_id: ID!): String
   }
 `;
