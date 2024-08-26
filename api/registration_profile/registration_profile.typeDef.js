@@ -35,6 +35,7 @@ const registrationProfiles = gql`
       filter: RegistrationProfileFilterInput
       sort: RegistrationProfileSortingInput
     ): [RegistrationProfile]!
+    GetOneRegistrationProfile(_id: ID!): RegistrationProfile!
   }
 
   #   Mutations

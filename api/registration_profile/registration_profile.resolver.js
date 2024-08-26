@@ -64,6 +64,34 @@ const registrationProfileResolver = {
         throw new Error(`Failed to fetch RegistrationProfiles: ${error.message}`);
       }
     },
+
+    /**
+     * Get one RegistrationDocument by id
+     * @param {Object} _parent
+     * @param {Object} args
+     * @param {String} args._id
+     * @param {Object} context
+     * @param {Object} context.models
+     * @param {import('./registration_profile.model').default} context.models.registrationProfile
+     * @returns {Promise<Object>}
+     */
+    GetOneRegistrationProfile: async (_parent, args, { models }) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(args._id)) {
+          throw new Error('Invalid ID format');
+        }
+
+        const registrationProfile = await models.registrationProfile.findById(args._id);
+        if (!registrationProfile) {
+          console.log(registrationProfile);
+          throw new Error('RegistrationProfile not found');
+        }
+
+        return registrationProfile;
+      } catch (error) {
+        throw new Error(`Failed to fetch RegistrationProfiles: ${error.message}`);
+      }
+    },
   },
   Mutation: {
     /**
