@@ -11,6 +11,17 @@ const registrationProfiles = gql`
     registration_fee: Float!
     termination_of_payment_id: ID!
   }
+
+  #   Mutations
+  type Mutation {
+    CreateRegistrationProfile(
+      registration_profile_name: String!
+      scholarship_fee: Float!
+      deposit: Float!
+      registration_fee: Float!
+      termination_of_payment_id: String!
+    ): RegistrationProfiles
+  }
 `;
 
 module.exports = registrationProfiles;
