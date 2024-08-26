@@ -48,6 +48,52 @@ const registrationProfilesResolver = {
         throw new Error(`Failed to create RegistrationProfiles: ${error.message}`);
       }
     },
+
+    /**
+     * Update RegistrationProfiles document
+     * @param {Object} _parent
+     * @param {Object} args
+     * @param {String} args._id
+     * @param {String} args.registration_profile_name
+     * @param {Float} args.scholarship_fee
+     * @param {Float} args.deposit
+     * @param {Float} args.registration_fee
+     * @param {String} args.termination_of_payment_id
+     */
+    UpdateRegistrationProfile: async (_parent, args) => {
+      if (
+        !isString(args.registration_profile_name) &&
+        !isNumber(args.scholarship_fee) &&
+        !isNumber(args.deposit) &&
+        !isNumber(args.registration_fee)
+      ) {
+        throw new Error('the arguments submitted do not meet the requirements');
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(args._id)) {
+        throw new Error('Invalid ID format');
+      }
+
+      try {
+        const updatedRegistrationProfiles = await RegistrationProfiles.findByIdAndUpdate(
+          args._id,
+          {
+            $set: {
+              registration_profile_name: args.registration_profile_name,
+              scholarship_fee: args.scholarship_fee,
+              deposit: args.deposit,
+              registration_fee: args.registration_fee,
+              termination_of_payment_id: args.termination_of_payment_id,
+            },
+          },
+          { new: true }
+        );
+
+        return updatedRegistrationProfiles;
+      } catch (error) {
+        throw new Error(`Failed to update RegistrationProfiles: ${error.message}`);
+      }
+    },
   },
 };
 

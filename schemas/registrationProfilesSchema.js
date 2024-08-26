@@ -21,6 +21,14 @@ const registrationProfiles = gql`
       registration_fee: Float!
       termination_of_payment_id: String!
     ): RegistrationProfiles
+    UpdateRegistrationProfile(
+      _id: ID!
+      registration_profile_name: String!
+      scholarship_fee: Float!
+      deposit: Float!
+      registration_fee: Float!
+      termination_of_payment_id: String!
+    ): RegistrationProfiles
   }
 `;
 
