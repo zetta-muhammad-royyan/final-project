@@ -8,8 +8,8 @@ const student = gql`
     civility: String!
     first_name: String!
     last_name: String!
-    financial_support_ids: [ID]!
-    registration_profile_id: ID!
+    financial_supports: [FinancialSupport]!
+    registration_profile: RegistrationProfile!
   }
 
   type FinancialSupport {

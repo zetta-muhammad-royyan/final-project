@@ -330,6 +330,35 @@ const studentResolver = {
       }
     },
   },
+
+  // *************** LOADER ***************
+  Student: {
+    /**
+     * Fetches the financial support details for the given parent object's `financial_support_ids`.
+     * @function financial_supports
+     * @param {Object} parent - The parent object containing the `financial_support_ids`.
+     * @param {Object} _args - Arguments provided by GraphQL resolver, not used in this function.
+     * @param {Object} context - The context object, which contains various loaders.
+     * @param {Object} context.loaders - The loaders object containing DataLoader instances.
+     * @returns {Promise<Array<Object>>} A promise that resolves to an array of financial support details loaded by DataLoader.
+     */
+    financial_supports: (parent, _args, { loaders }) => {
+      return loaders.financialSupportLoader.loadMany(parent.financial_support_ids);
+    },
+
+    /**
+     * Fetches the registration profile details for the given parent object's `registration_profile_id`.
+     * @function registration_profile
+     * @param {Object} parent - The parent object containing the `registration_profile_id`.
+     * @param {Object} _args - Arguments provided by GraphQL resolver, not used in this function.
+     * @param {Object} context - The context object, which contains various loaders.
+     * @param {Object} context.loaders - The loaders object containing DataLoader instances.
+     * @returns {Promise<Object>} A promise that resolves to the registration profile details loaded by DataLoader.
+     */
+    registration_profile: (parent, _args, { loaders }) => {
+      return loaders.registrationProfileLoader.load(parent.registration_profile_id);
+    },
+  },
 };
 
 // *************** EXPORT MODULE ***************

@@ -18,5 +18,10 @@ module.exports = {
       financialSupport: financialSupport.model,
       student: student.model,
     },
+    loaders: {
+      terminationOfPaymentLoader: terminationOfPayment.loader,
+      registrationProfileLoader: registrationProfile.loader,
+      financialSupportLoader: financialSupport.loader,
+    },
   },
 };

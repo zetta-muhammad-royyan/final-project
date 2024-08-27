@@ -19,6 +19,7 @@
   "dependencies": {
     "@graphql-tools/merge": "^6.0.0",
     "apollo-server-express": "^2.8.1",
+    "dataloader": "^2.2.2",
     "express": "^4.16.0",
     "graphql": "^14.4.2",
     "graphql-tools": "^4.0.5",

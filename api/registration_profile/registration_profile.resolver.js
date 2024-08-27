@@ -208,6 +208,22 @@ const registrationProfileResolver = {
       }
     },
   },
+
+  // *************** LOADER ***************
+  RegistrationProfile: {
+    /**
+     * Fetches the termination of payment details based on the provided parent object's `termination_of_payment_id`.
+     * @function termination_of_payment
+     * @param {Object} parent - The parent object containing the `termination_of_payment_id`.
+     * @param {Object} _args - Arguments provided by GraphQL resolver, not used in this function.
+     * @param {Object} context - The context object, which contains various loaders.
+     * @param {Object} context.loaders - The loaders object containing DataLoader instances.
+     * @returns {Promise<Object>} A promise that resolves to the termination of payment details loaded by DataLoader.
+     */
+    termination_of_payment: (parent, _args, { loaders }) => {
+      return loaders.terminationOfPaymentLoader.load(parent.termination_of_payment_id);
+    },
+  },
 };
 
 // *************** EXPORT MODULE ***************

@@ -9,7 +9,7 @@ const registrationProfiles = gql`
     scholarship_fee: Float!
     deposit: Float!
     registration_fee: Float!
-    termination_of_payment_id: ID!
+    termination_of_payment: TerminationOfPayment
   }
 
   # Inputs
