@@ -27,6 +27,28 @@ const student = gql`
     last_name: String!
   }
 
+  input StudentFilterInput {
+    student_full_name: String
+    registration_profile_id: ID
+    financial_support_full_name: String
+  }
+
+  input StudentSortInput {
+    registration_profile_name: Int
+    registration_profile_id: Int
+    financial_support_full_name: Int
+  }
+
+  input StudentPaginationInput {
+    page: Int!
+    limit: Int!
+  }
+
+  # queries
+  type Query {
+    GetAllStudents(filter: StudentFilterInput, sort: StudentSortInput, pagination: StudentPaginationInput): [Student]!
+  }
+
   # mutations
   type Mutation {
     CreateStudent(

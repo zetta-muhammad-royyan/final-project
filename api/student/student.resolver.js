@@ -9,7 +9,174 @@ const { IsString } = require('../../utils/primitiveTypes');
 
 const studentResolver = {
   // *************** Query ***************
-  Query: {},
+  Query: {
+    /**
+     * Retrieve all RegistrationProfiles with optional filter and sorting
+     * @param {Object} _parent
+     * @param {Object} args
+     * @param {Object} args.filter
+     * @param {String} args.filter.student_full_name
+     * @param {String} args.filter.registration_profile_id
+     * @param {String} args.filter.financial_support_full_name
+     * @param {Object} args.sort
+     * @param {String} args.sort.registration_profile_name
+     * @param {String} args.sort.registration_profile_id
+     * @param {String} args.sort.financial_support_full_name
+     * @param {Object} args.pagination
+     * @param {Int} args.pagination.page
+     * @param {Int} args.pagination.limit
+     * @param {Object} context
+     * @param {Object} context.models
+     * @returns {Promise<Object>}
+     */
+    GetAllStudents: async (_parent, { filter, sort, pagination }, { models }) => {
+      try {
+        const { page = 1, limit = 10 } = pagination;
+        if (page < 1 || limit < 1) {
+          throw new Error('Page and limit must be greater than 0');
+        }
+
+        const pipeline = [];
+
+        // *************** check if need to lookup to financial support or not ***************
+        let needsToRegistrationProfileLookup = sort && sort.registration_profile_name;
+
+        // *************** check if need to lookup to financial support or not ***************
+        let needsFinancialSupportLookup = filter && filter.financial_support_full_name ? true : false;
+        if (sort && sort.financial_support_full_name) {
+          needsFinancialSupportLookup = true;
+        }
+
+        // *************** if the sort based on registration_profile_name, need lookup first  ***************
+        if (needsToRegistrationProfileLookup) {
+          pipeline.push({
+            $lookup: {
+              from: 'registration_profiles',
+              localField: 'registration_profile_id',
+              foreignField: '_id',
+              as: 'registration_profile',
+            },
+          });
+
+          pipeline.push({
+            $unwind: {
+              path: '$registration_profile',
+              preserveNullAndEmptyArrays: true,
+            },
+          });
+        }
+
+        // *************** if the filter based on financial_support_full_name, need lookup first  ***************
+        if (needsFinancialSupportLookup) {
+          pipeline.push({
+            $lookup: {
+              from: 'financial_supports',
+              localField: 'financial_support_ids',
+              foreignField: '_id',
+              as: 'financial_supports',
+            },
+          });
+
+          pipeline.push({
+            $unwind: {
+              path: '$financial_supports',
+              preserveNullAndEmptyArrays: true,
+            },
+          });
+        }
+
+        // *************** add field if need concatenated name ***************
+        const addFieldStage = {
+          $addFields: {},
+        };
+
+        // *************** check if the filter is on or not ***************
+        if (sort || filter) {
+          if ((filter && filter.student_full_name) || needsFinancialSupportLookup || (sort && sort.financial_support_full_name)) {
+            if (filter && filter.student_full_name !== undefined) {
+              addFieldStage.$addFields.student_full_name = {
+                $concat: ['$first_name', ' ', '$last_name'],
+              };
+            }
+
+            if (needsFinancialSupportLookup) {
+              addFieldStage.$addFields.financial_support_full_name = {
+                $concat: ['$financial_supports.first_name', ' ', '$financial_supports.last_name'],
+              };
+            }
+          }
+        }
+
+        if (Object.keys(addFieldStage.$addFields).length > 0) {
+          pipeline.push(addFieldStage);
+        }
+
+        // *************** sort stage ***************
+        const sortStage = {};
+        if (sort) {
+          if (sort.registration_profile_name) {
+            sortStage['registration_profile.name'] = sort.registration_profile_name;
+          }
+
+          if (sort.registration_profile_id) {
+            sortStage.registration_profile_id = sort.registration_profile_id;
+          }
+
+          if (sort.financial_support_full_name) {
+            sortStage.financial_support_full_name = sort.financial_support_full_name;
+          }
+        }
+
+        if (Object.keys(sortStage).length > 0) {
+          pipeline.push({ $sort: sortStage });
+        }
+
+        // *************** match stage ***************
+        const matchStage = {};
+        if (filter) {
+          if (filter.student_full_name) {
+            matchStage.student_full_name = { $regex: filter.student_full_name, $options: 'i' };
+          }
+
+          if (filter.registration_profile_id) {
+            matchStage.registration_profile_id = mongoose.Types.ObjectId(filter.registration_profile_id);
+          }
+
+          if (filter.financial_support_full_name) {
+            matchStage.financial_support_full_name = { $regex: filter.financial_support_full_name, $options: 'i' };
+          }
+        }
+
+        if (Object.keys(matchStage).length > 0) {
+          pipeline.push({ $match: matchStage });
+        }
+
+        // *************** pagination stage ***************
+        pipeline.push({ $skip: (page - 1) * limit });
+        pipeline.push({ $limit: limit });
+
+        // *************** project stage ***************
+        pipeline.push({
+          $project: {
+            _id: 1,
+            civility: 1,
+            first_name: 1,
+            last_name: 1,
+            financial_support_ids: 1,
+            registration_profile_id: 1,
+            financial_supports: 1,
+            financial_support_full_name: 1,
+            student_full_name: 1,
+          },
+        });
+
+        const students = await models.student.aggregate(pipeline);
+        return students;
+      } catch (error) {
+        throw new Error(`Failed to fetch all Student: ${error.message}`);
+      }
+    },
+  },
 
   // *************** Mutation ***************
   Mutation: {
@@ -123,7 +290,6 @@ const studentResolver = {
         }
 
         const deletedStudent = await models.student.findByIdAndDelete(args._id);
-        console.log(deletedStudent);
         if (!deletedStudent) {
           throw new Error('Student not found');
         }
