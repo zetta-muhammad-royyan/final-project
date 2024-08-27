@@ -47,6 +47,7 @@ const student = gql`
   # queries
   type Query {
     GetAllStudents(filter: StudentFilterInput, sort: StudentSortInput, pagination: StudentPaginationInput): [Student]!
+    GetOneStudent(_id: ID!): Student
   }
 
   # mutations

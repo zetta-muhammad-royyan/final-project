@@ -176,6 +176,31 @@ const studentResolver = {
         throw new Error(`Failed to fetch all Student: ${error.message}`);
       }
     },
+
+    /**
+     * Get one student document by id
+     * @param {Object} _parent
+     * @param {Object} args
+     * @param {string} args._id
+     * @param {Object} context
+     * @param {Object} context.models
+     */
+    GetOneStudent: async (_parent, args, { models }) => {
+      try {
+        if (!mongoose.Types.ObjectId.isValid(args._id)) {
+          throw new Error('Invalid ID format');
+        }
+
+        const student = await models.student.findById(args._id);
+        if (!student) {
+          throw new Error('Student not found');
+        }
+
+        return student;
+      } catch (error) {
+        throw new Error(`Failed to fetch Student by Id: ${error.message}`);
+      }
+    },
   },
 
   // *************** Mutation ***************
