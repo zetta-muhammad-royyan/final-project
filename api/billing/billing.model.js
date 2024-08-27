@@ -13,7 +13,7 @@ const billingSchema = new mongoose.Schema({
     required: true,
   },
   payer: {
-    type: mongoose.Types.ObjectID,
+    type: mongoose.Schema.Types.ObjectID,
     required: true,
   },
   total_amount: {
