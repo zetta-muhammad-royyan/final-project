@@ -12,6 +12,7 @@ const billing = gql`
     paid_amount: Float!
     remaining_due: Float!
     terms: [Term]!
+    deposit: Deposit
   }
 
   type Payer {
