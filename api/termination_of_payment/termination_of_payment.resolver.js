@@ -27,7 +27,7 @@ const { ValidateTerminationOfPaymentInput, ValidatePagination } = require('./ter
  * @param {Int} args.pagination.limit - Number of items per page.
  * @returns {Promise<Object>} Paginated result with items and total count.
  */
-const GetAllTerminationOfPayment = async (_parent, { filter, sort, pagination }) => {
+const GetAllTerminationOfPayments = async (_parent, { filter, sort, pagination }) => {
   try {
     //*************** page and limit must be greater than 0
     const { page = 1, limit = 10 } = pagination;
@@ -172,7 +172,7 @@ const DeleteTerminationOfPayment = async (_parent, args) => {
 
 const terminationOfPaymentResolver = {
   Query: {
-    GetAllTerminationOfPayment,
+    GetAllTerminationOfPayments,
     GetOneTerminationOfPayment,
   },
 
