@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const { AddOrReplaceFinancialSupport } = require('../financial_support/financial_support.helper');
 
 // *************** IMPORT UTILITIES ***************
-const { IsString } = require('../../utils/primitiveTypes');
+const { IsString } = require('../../utils/primitiveTypes.utils');
 
 const studentResolver = {
   // *************** Query ***************

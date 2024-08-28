@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const RegistrationProfile = require('./registration_profile.model');
 
 // *************** Import utils ***************
-const { IsNumber, IsString } = require('../../utils/primitiveTypes');
+const { IsNumber, IsString } = require('../../utils/primitiveTypes.utils');
 
 const registrationProfileResolver = {
   // *************** Query ***************

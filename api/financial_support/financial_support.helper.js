@@ -2,7 +2,7 @@
 const FinancialSupport = require('./financial_support.model');
 
 // *************** IMPORT UTILITIES ***************
-const { IsString } = require('../../utils/primitiveTypes');
+const { IsString } = require('../../utils/primitiveTypes.utils');
 
 /**
  * Add or replace financial support for student
