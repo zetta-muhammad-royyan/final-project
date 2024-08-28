@@ -84,7 +84,6 @@ const registrationProfileResolver = {
 
         const registrationProfile = await models.registrationProfile.findById(args._id);
         if (!registrationProfile) {
-          console.log(registrationProfile);
           throw new Error('RegistrationProfile not found');
         }
 

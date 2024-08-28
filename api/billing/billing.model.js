@@ -31,13 +31,11 @@ const billingSchema = new mongoose.Schema({
   deposit_id: {
     type: mongoose.Schema.Types.ObjectID,
     ref: 'deposit',
-    required: true,
   },
   term_ids: [
     {
       type: mongoose.Schema.Types.ObjectID,
       ref: 'terms',
-      required: true,
     },
   ],
 });

@@ -12,7 +12,7 @@ const deposit = require('./api/deposit');
 
 // *************** EXPORT MODULE ***************
 module.exports = {
-  resolvers: [terminationOfPayment.resolver, registrationProfile.resolver, student.resolver],
+  resolvers: [terminationOfPayment.resolver, registrationProfile.resolver, student.resolver, billing.resolver],
   typeDefs: mergeTypeDefs([
     terminationOfPayment.typeDef,
     registrationProfile.typeDef,
@@ -35,6 +35,9 @@ module.exports = {
       terminationOfPaymentLoader: terminationOfPayment.loader,
       registrationProfileLoader: registrationProfile.loader,
       financialSupportLoader: financialSupport.loader,
+      billingLoader: billing.loader,
+      depositLoader: deposit.loader,
+      termLoader: term.loader,
     },
   },
 };

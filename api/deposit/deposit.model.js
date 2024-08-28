@@ -5,7 +5,6 @@ const depositSchema = new mongoose.Schema({
   billing_id: {
     type: mongoose.Schema.Types.ObjectID,
     ref: 'billings',
-    required: true,
   },
   date: {
     type: String,
