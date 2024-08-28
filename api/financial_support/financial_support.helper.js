@@ -1,8 +1,8 @@
 // *************** IMPORT MODULE ***************
 const FinancialSupport = require('./financial_support.model');
 
-// *************** IMPORT UTILITIES ***************
-const { IsString } = require('../../utils/primitiveTypes.utils');
+// *************** IMPORT VALIDATOR ***************
+const { ValidateFinancialSupportInput } = require('./financial_support.validator');
 
 /**
  * Add or replace financial support for student
@@ -18,19 +18,9 @@ const { IsString } = require('../../utils/primitiveTypes.utils');
 const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => {
   const financialSupportsData = [];
 
-  // *************** loop all FinancialSupport and do checking ***************
+  // *************** loop all FinancialSupport and do checking
   for (let i = 0; i < financialSupports.length; i++) {
-    if (
-      !IsString(financialSupports[i].civility) ||
-      !IsString(financialSupports[i].first_name) ||
-      !IsString(financialSupports[i].last_name)
-    ) {
-      throw new Error('arguments not met the requirements');
-    }
-
-    if (!['mr', 'mrs', 'neutral'].includes(financialSupports[i].civility.toLocaleLowerCase())) {
-      throw new Error('the civility must be mr, mrs or neutral');
-    }
+    ValidateFinancialSupportInput(financialSupports[i].civility, financialSupports[i].first_name, financialSupports[i].last_name);
 
     financialSupportsData.push({
       civility: financialSupports[i].civility,
@@ -40,19 +30,19 @@ const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => 
     });
   }
 
-  // *************** delete existing financial support if any ***************
+  // *************** delete existing financial support if any
   if (student.financial_support_ids.length != 0 && financialSupports.length != 0) {
     await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
   }
 
-  // *************** student didnt change their financial supports ***************
+  // *************** student didnt change their financial supports
   if (student.financial_support_ids.length > 0 && financialSupports.length === 0) {
     return student.financial_support_ids;
   }
 
   const newFinancialSupports = await FinancialSupport.insertMany(financialSupportsData);
 
-  // *************** return the ids FinancialSupport that just created ***************
+  // *************** return the ids FinancialSupport that just created
   return newFinancialSupports.map((fs) => fs._id);
 };
 
