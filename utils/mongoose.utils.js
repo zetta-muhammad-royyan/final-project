@@ -11,4 +11,13 @@ const CheckObjectId = (id, message = 'Invalid ID format') => {
   }
 };
 
-module.exports = { CheckObjectId };
+/**
+ * Converts a string to a MongoDB ObjectId.
+ * @param {string} id - The string representation of the ObjectId.
+ * @returns {import('mongoose').Types.ObjectId} The converted ObjectId.
+ */
+const ConvertToObjectId = (id) => {
+  return mongoose.Types.ObjectId(id);
+};
+
+module.exports = { CheckObjectId, ConvertToObjectId };
