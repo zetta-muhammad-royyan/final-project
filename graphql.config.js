@@ -38,6 +38,7 @@ module.exports = {
       billingLoader: billing.loader,
       depositLoader: deposit.loader,
       termLoader: term.loader,
+      studentLoader: student.loader,
     },
   },
 };
