@@ -2,7 +2,13 @@
 const { CheckObjectId } = require('../../utils/mongoose.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
-const { CheckIfStudentHasBillingOrNot, GenerateBillingBasedOnPayer } = require('./billing.helper');
+const {
+  CheckIfStudentHasBillingOrNot,
+  GenerateBillingBasedOnPayer,
+  FindBillingWithLookup,
+  PayDeposit,
+  PayTerms,
+} = require('./billing.helper');
 
 // *************** IMPORT VALIDATOR ***************
 const { ValidatePayer } = require('./billing.validator');
@@ -64,6 +70,76 @@ const GenerateBilling = async (_parent, args, { models }) => {
   );
 
   return billings;
+};
+
+/**
+ * @param {Object} _parent
+ * @param {Object} args
+ * @param {string} args.billing_id
+ * @param {number} args.amount
+ * @param {Object} context
+ * @param {Object} context.models
+ */
+const AddPayment = async (_parent, args, { models }) => {
+  CheckObjectId(args.billing_id);
+
+  if (args.amount <= 0) {
+    throw new Error('amount must be greater than 0');
+  }
+
+  const billing = await FindBillingWithLookup({ billingId: args.billing_id }, ['term', 'deposit']);
+  if (!billing) {
+    throw new Error('Billing not found');
+  }
+
+  const depositAmount = billing.deposit.reduce((acc, curr) => acc + curr.remaining_amount, 0);
+  const termAmount = billing.terms.reduce((acc, curr) => acc + curr.remaining_amount, 0);
+  const maxAmountToBePaid = depositAmount + termAmount;
+
+  if (args.amount > maxAmountToBePaid) {
+    throw new Error('the amount to be paid is more than it should be');
+  }
+
+  //*************** billing hold deposit amount
+  if (billing.deposit_id) {
+    //*************** pay deposit first
+    const remainder = await PayDeposit(billing.deposit[0], args.amount);
+    console.log(remainder);
+    //*************** if remainder amount more than 0 then pay the terms
+    await PayTerms(billing.terms, remainder);
+  } else {
+    //*************** if billing doesnt hold deposit amount then fetch another student billing
+    const billings = FindBillingWithLookup({ studentId: billing.student_id }, ['term', 'deposit']);
+    const depositBilling = billings.find((billing) => billing.deposit_id);
+    if (!depositBilling) {
+      throw new Error('this student doesnt have deposit billing');
+    }
+
+    //*************** deposit must be paid first before pay term
+    if (depositBilling.deposit.reduce((acc, curr) => acc + curr.remaining_amount, 0) > 0) {
+      throw new Error('must pay the deposit first');
+    }
+
+    //*************** deposit on another billing already paid then pay the terms
+    await PayTerms(billing.terms, args.amount);
+  }
+
+  const paidAmount =
+    args.amount > billing.remaining_due
+      ? parseFloat(args.amount).toFixed(2)
+      : (parseFloat(billing.paid_amount) + parseFloat(args.amount)).toFixed(2);
+
+  const remainingDue =
+    args.amount - billing.remaining_due < 0
+      ? Math.abs(parseFloat(args.amount) - parseFloat(billing.remaining_due)).toFixed(2)
+      : parseFloat(0).toFixed(2);
+
+  const updatedBilling = await models.billing.findByIdAndUpdate(billing._id, {
+    paid_amount: paidAmount,
+    remaining_due: remainingDue,
+  });
+
+  return updatedBilling;
 };
 
 // *************** LOADER ***************
@@ -154,6 +230,7 @@ const billingResolver = {
 
   Mutation: {
     GenerateBilling,
+    AddPayment,
   },
 
   Billing: {

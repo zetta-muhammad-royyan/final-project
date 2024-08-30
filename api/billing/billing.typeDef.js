@@ -37,6 +37,7 @@ const billing = gql`
   # mutations
   type Mutation {
     GenerateBilling(student_id: ID!, payment_type: PaymentTypeEnum!, payer: [PayerInput!]!): [Billing!]!
+    AddPayment(billing_id: ID!, amount: Float!): Billing
   }
 `;
 
