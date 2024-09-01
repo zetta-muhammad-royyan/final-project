@@ -9,6 +9,7 @@ const {
   FindBillingWithLookup,
   PayDeposit,
   PayTerms,
+  RemovePaidTermAmount,
 } = require('./billing.helper');
 
 // *************** IMPORT VALIDATOR ***************
@@ -150,6 +151,63 @@ const AddPayment = async (_parent, args, { models }) => {
   }
 };
 
+/**
+ * @param {Object} _parent
+ * @param {Object} args
+ * @param {string} args.billing_id
+ * @param {number} args.amount
+ * @param {Object} context
+ * @param {Object} context.models
+ */
+const RemovePayment = async (_parent, args, { models }) => {
+  try {
+    CheckObjectId(args.billing_id);
+
+    //*************** only two decimal allowed
+    AmountMustHaveMaxTwoDecimal(args.amount);
+
+    //*************** amount must be greater than zero
+    AmountMustGreaterThanZero(args.amount);
+
+    const billing = await FindBillingWithLookup({ billingId: args.billing_id }, ['term']);
+    if (!billing) {
+      throw new Error('Billing not found');
+    }
+
+    //*************** can only remove term amount cannot remove deposit amount
+    const maxAmountToBeRemoved = billing.terms.reduce((acc, curr) => acc + curr.amount_paid, 0);
+    if (args.amount > maxAmountToBeRemoved) {
+      throw new Error('cannot remove amount greater than paid amount and only can remove term amount, cannot remove deposit amount');
+    }
+
+    //*************** remove paid term amount
+    await RemovePaidTermAmount(billing.terms, args.amount);
+
+    const paidAmount =
+      args.amount >= billing.paid_amount
+        ? parseFloat(0).toFixed(2)
+        : (parseFloat(billing.paid_amount) - parseFloat(args.amount)).toFixed(2);
+
+    const remainingDue =
+      args.amount >= billing.paid_amount
+        ? parseFloat(billing.total_amount).toFixed(2)
+        : (parseFloat(billing.remaining_due) + parseFloat(args.amount)).toFixed(2);
+
+    const updatedBilling = await models.billing.findByIdAndUpdate(
+      billing._id,
+      {
+        paid_amount: paidAmount,
+        remaining_due: remainingDue,
+      },
+      { new: true }
+    );
+
+    return updatedBilling;
+  } catch (error) {
+    throw new Error(`Failed to remove payment: ${error.message}`);
+  }
+};
+
 // *************** LOADER ***************
 
 /**.
@@ -239,6 +297,7 @@ const billingResolver = {
   Mutation: {
     GenerateBilling,
     AddPayment,
+    RemovePayment,
   },
 
   Billing: {
