@@ -389,6 +389,99 @@ const RemovePaidTermAmount = async (terms, removedAmount) => {
   }
 };
 
+/**
+ * @param {string} from - The name of the collection to perform the $lookup on.
+ * @param {string} localField - The local field to perform the $lookup with.
+ * @param {string} foreignField - The foreign field to perform the $lookup with.
+ * @param {string} as - The name of the new array field to add to the input documents.
+ * @param {boolean} unwind - If this true then unwind
+ * @returns {Array<{ $lookup: { from: string, localField: string, foreignField: string, as: string } } | { $unwind: { path: string, preserveNullAndEmptyArrays: boolean } }>}
+ */
+const CreateLookupPipelineStage = (from, localField, foreignField, as, unwind = false) => {
+  //*************** Create $lookup stage
+  const lookupStage = {
+    $lookup: {
+      from,
+      localField,
+      foreignField,
+      as,
+    },
+  };
+
+  //*************** Create $unwind stage
+  let unwindStage = {};
+  if (unwind) {
+    unwindStage.$unwind = {
+      path: `$${as}`,
+      preserveNullAndEmptyArrays: true,
+    };
+  }
+
+  return unwind ? [lookupStage, unwindStage] : [lookupStage];
+};
+
+/**
+ * @param {string} field1
+ * @param {string} field2
+ * @param {string} separator
+ * @returns {{$concat: Array<string>}}
+ */
+const CreateConcatPipelineStage = (field1, field2, separator = ' ') => {
+  return { $concat: [field1, separator, field2] };
+};
+
+/**
+ * @param {Object} filter
+ * @param {string} filter.student_full_name
+ * @param {string} filter.payer_full_name
+ * @param {number} filter.termination
+ * @returns {object}
+ */
+const CreateMatchPipelineStage = (filter) => {
+  const matchStage = {};
+  if (filter) {
+    if (filter.student_full_name) {
+      matchStage.student_full_name = { $regex: filter.student_full_name, $options: 'i' };
+    }
+
+    if (filter.payer_full_name) {
+      matchStage.payer_full_name = { $regex: filter.payer_full_name, $options: 'i' };
+    }
+
+    if (filter.termination) {
+      matchStage['termination_of_payment.termination'] = filter.termination;
+    }
+  }
+
+  return matchStage;
+};
+
+/**
+ * @param {Object} sort
+ * @param {string} sort.student_full_name
+ * @param {string} sort.payer_full_name
+ * @param {number} sort.termination
+ * @returns {object}
+ */
+const CreateSortPipelineStage = (sort) => {
+  const sortStage = {};
+  if (sort) {
+    if (sort.student_full_name) {
+      sortStage.student_full_name = sort.student_full_name;
+    }
+
+    if (sort.payer_full_name) {
+      sortStage.payer_full_name = sort.payer_full_name;
+    }
+
+    if (sort.termination) {
+      sortStage['termination_of_payment.termination'] = sort.termination;
+    }
+  }
+
+  return sortStage;
+};
+
 // *************** EXPORT MODULE ***************
 module.exports = {
   CheckIfStudentHasBillingOrNot,
@@ -397,4 +490,8 @@ module.exports = {
   PayDeposit,
   PayTerms,
   RemovePaidTermAmount,
+  CreateLookupPipelineStage,
+  CreateConcatPipelineStage,
+  CreateMatchPipelineStage,
+  CreateSortPipelineStage,
 };

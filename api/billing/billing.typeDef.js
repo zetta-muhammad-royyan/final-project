@@ -28,10 +28,32 @@ const billing = gql`
     cost_coverage: Float!
   }
 
+  input BillingFilterInput {
+    student_full_name: String
+    payer_full_name: String
+    termination: Int
+  }
+
+  input BillingSortInput {
+    student_full_name: Int
+    payer_full_name: Int
+    termination: Int
+  }
+
+  input BillingPaginationInput {
+    page: Int!
+    limit: Int!
+  }
+
   # enums
   enum PaymentTypeEnum {
     my_self
     family
+  }
+
+  # query
+  type Query {
+    GetAllBillings(filter: BillingFilterInput, sort: BillingSortInput, pagination: BillingPaginationInput!): [Billing]!
   }
 
   # mutations
