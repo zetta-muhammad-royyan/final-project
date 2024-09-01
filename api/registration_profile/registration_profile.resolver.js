@@ -7,6 +7,7 @@ const RegistrationProfile = require('./registration_profile.model');
 // *************** IMPORT UTILITIES ***************
 const { IsNumber, IsString } = require('../../utils/primitiveTypes.utils');
 const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { AmountMustHaveMaxTwoDecimal, AmountCannotBeMinus } = require('../../utils/monetary.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const { CreatePipelineMatchStage, CreatePipelineSortStage } = require('./registration_profile.helper');
@@ -111,6 +112,16 @@ const CreateRegistrationProfile = async (_parent, args) => {
 
     CheckObjectId(args.termination_of_payment_id);
 
+    //*************** only two decimal allowed
+    AmountMustHaveMaxTwoDecimal(args.scholarship_fee);
+    AmountMustHaveMaxTwoDecimal(args.deposit);
+    AmountMustHaveMaxTwoDecimal(args.registration_fee);
+
+    //*************** amount cannot be minus
+    AmountCannotBeMinus(args.scholarship_fee);
+    AmountCannotBeMinus(args.deposit);
+    AmountCannotBeMinus(args.registration_fee);
+
     const newRegistrationProfile = new RegistrationProfile({
       registration_profile_name: args.registration_profile_name,
       scholarship_fee: args.scholarship_fee,
@@ -149,6 +160,16 @@ const UpdateRegistrationProfile = async (_parent, args) => {
     }
 
     CheckObjectId(args._id);
+
+    //*************** only two decimal allowed
+    AmountMustHaveMaxTwoDecimal(args.scholarship_fee);
+    AmountMustHaveMaxTwoDecimal(args.deposit);
+    AmountMustHaveMaxTwoDecimal(args.registration_fee);
+
+    //*************** amount cannot be minus
+    AmountCannotBeMinus(args.scholarship_fee);
+    AmountCannotBeMinus(args.deposit);
+    AmountCannotBeMinus(args.registration_fee);
 
     const updatedRegistrationProfiles = await RegistrationProfile.findByIdAndUpdate(
       args._id,

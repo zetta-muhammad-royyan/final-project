@@ -1,6 +1,6 @@
 // *************** IMPORT UTILITIES ***************
 const { CheckObjectId } = require('../../utils/mongoose.utils');
-const { ValidateAmount } = require('../../utils/monetary.utils');
+const { AmountMustHaveMaxTwoDecimal, AmountMustGreaterThanZero } = require('../../utils/monetary.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const {
@@ -85,8 +85,11 @@ const AddPayment = async (_parent, args, { models }) => {
   try {
     CheckObjectId(args.billing_id);
 
-    //*************** amount must be greater than 0 and only two decimal allowed
-    ValidateAmount(args.amount);
+    //*************** only two decimal allowed
+    AmountMustHaveMaxTwoDecimal(args.amount);
+
+    //*************** amount must be greater than zero
+    AmountMustGreaterThanZero(args.amount);
 
     const billing = await FindBillingWithLookup({ billingId: args.billing_id }, ['term', 'deposit']);
     if (!billing) {

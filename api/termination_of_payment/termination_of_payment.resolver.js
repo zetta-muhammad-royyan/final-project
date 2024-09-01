@@ -3,6 +3,7 @@ const TerminationOfPayment = require('./termination_of_payment.model');
 
 // *************** IMPORT UTILITIES ***************
 const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { AmountCannotBeMinus, AmountMustHaveMaxTwoDecimal } = require('../../utils/monetary.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const { CreatePipelineMatchStage, CreateSortPipeline } = require('./termination_of_payment.helper');
@@ -95,6 +96,13 @@ const GetOneTerminationOfPayment = async (_parent, { _id }) => {
 const CreateTerminationOfPayment = async (_parent, args) => {
   try {
     ValidateTerminationOfPaymentInput(args);
+
+    //*************** only two decimal allowed
+    AmountMustHaveMaxTwoDecimal(args.additional_cost);
+
+    //*************** amount cannot be minus
+    AmountCannotBeMinus(args.additional_cost);
+
     const newTerminationOfPayment = new TerminationOfPayment({
       description: args.description,
       termination: args.term_payments.length,
@@ -124,6 +132,12 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
   try {
     ValidateTerminationOfPaymentInput(args);
     CheckObjectId(args._id);
+
+    //*************** only two decimal allowed
+    AmountMustHaveMaxTwoDecimal(args.additional_cost);
+
+    //*************** amount cannot be minus
+    AmountCannotBeMinus(args.additional_cost);
 
     const updatedTerminationOfPayment = await TerminationOfPayment.findByIdAndUpdate(
       args._id,
