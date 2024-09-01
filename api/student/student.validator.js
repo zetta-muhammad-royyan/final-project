@@ -35,9 +35,5 @@ const ValidateCivility = (civility) => {
   }
 };
 
-module.exports = { ValidateCivility, ValidateStudentInput };
-
 // *************** EXPORT MODULE ***************
-module.exports = {
-  ValidatePagination,
-};
+module.exports = { ValidatePagination, ValidateStudentInput };
