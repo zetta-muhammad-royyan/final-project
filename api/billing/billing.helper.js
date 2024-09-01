@@ -42,6 +42,7 @@ const GenerateBillingBasedOnPayer = async (studentId, registrationProfileId, pay
 
   //*************** this block only executed when payer is mix or only financial support
   for (let i = 0; i < payer.length; i++) {
+    console.log(`term amount for payer ${i}`, termAmountForEachPayer[i]);
     if (payer[i].type === 'FinancialSupport') {
       const termIds = await GenerateTerms(termPayments, termAmountForEachPayer[i]);
       billingData.push({
@@ -136,11 +137,18 @@ const GenerateTerms = async (termPayments, termAmount) => {
     });
   });
 
+  console.log('termData before precise', termData);
+
+  //*************** make each term precise
   const totalDistributed = termData.reduce((acc, curr) => acc + curr.amount, 0);
   const difference = parseFloat((termAmount - totalDistributed).toFixed(2));
   if (difference !== 0) {
-    termData[termData.length - 1].amount += difference;
+    const lastTerm = termData[termData.length - 1];
+    lastTerm.amount = parseFloat(lastTerm.amount + difference).toFixed(2);
+    lastTerm.remaining_amount = parseFloat(lastTerm.remaining_amount + difference).toFixed(2);
   }
+
+  console.log('termData after precise', termData);
 
   const terms = await Term.insertMany(termData);
   return terms.map((term) => term._id);
@@ -214,16 +222,29 @@ const UpdateDepositBillingId = async (billings) => {
  * @returns {number[]} An arrays for totalAmount and termAmount, each distributed precisely among payers.
  */
 const CalculateTermAmountForEachPayer = (payers, termAmount) => {
+  console.log('total term amount', termAmount);
   const amountForEachPayer = payers.map((payer) => {
     const coveragePercentage = payer.cost_coverage / 100;
     return parseFloat((termAmount * coveragePercentage).toFixed(2));
   });
+
+  console.log(
+    'before precise',
+    amountForEachPayer,
+    amountForEachPayer.reduce((acc, curr) => acc + curr, 0)
+  );
 
   const totalDistributed = amountForEachPayer.reduce((acc, curr) => acc + curr, 0);
   const difference = parseFloat((termAmount - totalDistributed).toFixed(2));
   if (difference !== 0) {
     amountForEachPayer[amountForEachPayer.length - 1] += difference;
   }
+
+  console.log(
+    'after precise',
+    amountForEachPayer,
+    amountForEachPayer.reduce((acc, curr) => acc + curr, 0)
+  );
 
   return amountForEachPayer;
 };
@@ -295,17 +316,22 @@ const PayDeposit = async (deposit, paidAmount) => {
 
   const isPaid = paidAmount - deposit.remaining_amount >= 0;
   const paymentStatus = isPaid ? 'paid' : 'partial_paid';
-  const amountPaid = paidAmount > deposit.remaining_amount ? deposit.amount : deposit.amount_paid + paidAmount;
-  const remainingAmountToBePaid = paidAmount - deposit.remaining_amount < 0 ? Math.abs(paidAmount - deposit.remaining_amount) : 0;
-  const remainder = paidAmount - deposit.remaining_amount > 0 ? paidAmount - deposit.remaining_amount : 0;
+
+  const amountPaid =
+    paidAmount > deposit.remaining_amount ? parseFloat(deposit.amount).toFixed(2) : parseFloat(deposit.amount_paid + paidAmount).toFixed(2);
+
+  const remainingAmountToBePaid =
+    paidAmount - deposit.remaining_amount < 0 ? parseFloat(Math.abs(paidAmount - deposit.remaining_amount)).toFixed(2) : 0;
+
+  const remainder = paidAmount - deposit.remaining_amount > 0 ? parseFloat(paidAmount - deposit.remaining_amount).toFixed(2) : 0;
 
   await Deposit.findByIdAndUpdate(deposit._id, {
     payment_status: paymentStatus,
-    amount_paid: parseFloat(amountPaid).toFixed(2),
-    remaining_amount: parseFloat(remainingAmountToBePaid).toFixed(2),
+    amount_paid: amountPaid,
+    remaining_amount: remainingAmountToBePaid,
   });
 
-  return parseFloat(remainder).toFixed(2);
+  return remainder;
 };
 
 /**
