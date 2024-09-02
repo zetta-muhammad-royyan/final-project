@@ -1,6 +1,9 @@
 // *************** IMPORT MODULE ***************
 const FinancialSupport = require('./financial_support.model');
 
+// *************** IMPORT UTILITIES ***************
+const { TrimString } = require('../../utils/string.utils');
+
 // *************** IMPORT VALIDATOR ***************
 const { ValidateFinancialSupportInput } = require('./financial_support.validator');
 
@@ -24,8 +27,8 @@ const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => 
 
     financialSupportsData.push({
       civility: financialSupports[i].civility,
-      first_name: financialSupports[i].first_name,
-      last_name: financialSupports[i].last_name,
+      first_name: TrimString(financialSupports[i].first_name),
+      last_name: TrimString(financialSupports[i].last_name),
       student_id: student._id,
     });
   }

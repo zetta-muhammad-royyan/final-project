@@ -9,6 +9,7 @@ const {
 
 // *************** IMPORT UTILITIES ***************
 const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { TrimString } = require('../../utils/string.utils');
 
 // *************** IMPORT VALIDATOR ***************
 const { ValidatePagination, ValidateStudentInput } = require('./student.validator');
@@ -180,8 +181,8 @@ const CreateStudent = async (_parent, args, { models }) => {
 
     const newStudent = new models.student({
       civility: args.civility,
-      first_name: args.first_name,
-      last_name: args.last_name,
+      first_name: TrimString(args.first_name),
+      last_name: TrimString(args.last_name),
       registration_profile_id: args.registration_profile_id,
     });
 
@@ -229,8 +230,8 @@ const UpdateStudent = async (_parent, args, { models }) => {
 
     // *************** Update student with new data
     student.civility = args.civility;
-    student.first_name = args.first_name;
-    student.last_name = args.last_name;
+    student.first_name = TrimString(args.first_name);
+    student.last_name = TrimString(args.last_name);
     student.financial_support_ids = financialSupportIds;
     student.registration_profile_id = args.registration_profile_id;
 
