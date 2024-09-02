@@ -8,6 +8,7 @@ const RegistrationProfile = require('./registration_profile.model');
 const { IsNumber, IsString } = require('../../utils/primitiveTypes.utils');
 const { CheckObjectId } = require('../../utils/mongoose.utils');
 const { AmountMustHaveMaxTwoDecimal, AmountCannotBeMinus } = require('../../utils/monetary.utils');
+const { TrimString } = require('../../utils/string.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const { CreatePipelineMatchStage, CreatePipelineSortStage } = require('./registration_profile.helper');
@@ -102,9 +103,9 @@ const GetOneRegistrationProfile = async (_parent, args, { models }) => {
 const CreateRegistrationProfile = async (_parent, args) => {
   try {
     if (
-      !IsString(args.registration_profile_name) &&
-      !IsNumber(args.scholarship_fee) &&
-      !IsNumber(args.deposit) &&
+      !IsString(args.registration_profile_name) ||
+      !IsNumber(args.scholarship_fee) ||
+      !IsNumber(args.deposit) ||
       !IsNumber(args.registration_fee)
     ) {
       throw new Error('the arguments submitted do not meet the requirements');
@@ -123,7 +124,7 @@ const CreateRegistrationProfile = async (_parent, args) => {
     AmountCannotBeMinus(args.registration_fee);
 
     const newRegistrationProfile = new RegistrationProfile({
-      registration_profile_name: args.registration_profile_name,
+      registration_profile_name: TrimString(args.registration_profile_name),
       scholarship_fee: args.scholarship_fee,
       deposit: args.deposit,
       registration_fee: args.registration_fee,
@@ -151,9 +152,9 @@ const CreateRegistrationProfile = async (_parent, args) => {
 const UpdateRegistrationProfile = async (_parent, args) => {
   try {
     if (
-      !IsString(args.registration_profile_name) &&
-      !IsNumber(args.scholarship_fee) &&
-      !IsNumber(args.deposit) &&
+      !IsString(args.registration_profile_name) ||
+      !IsNumber(args.scholarship_fee) ||
+      !IsNumber(args.deposit) ||
       !IsNumber(args.registration_fee)
     ) {
       throw new Error('the arguments submitted do not meet the requirements');
@@ -175,7 +176,7 @@ const UpdateRegistrationProfile = async (_parent, args) => {
       args._id,
       {
         $set: {
-          registration_profile_name: args.registration_profile_name,
+          registration_profile_name: TrimString(args.registration_profile_name),
           scholarship_fee: args.scholarship_fee,
           deposit: args.deposit,
           registration_fee: args.registration_fee,
