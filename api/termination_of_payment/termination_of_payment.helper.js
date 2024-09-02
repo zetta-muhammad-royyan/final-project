@@ -1,3 +1,10 @@
+// *************** IMPORT MODULE ***************
+const RegistrationProfile = require('../registration_profile/registration_profile.model');
+const Billing = require('../billing/billing.model');
+
+// *************** IMPORT UTILITIES ***************
+const { ConvertToObjectId } = require('../../utils/mongoose.utils');
+
 /**
  * @param {Object} filter
  * @param {string} filter.description
@@ -38,7 +45,44 @@ const CreateSortPipeline = (sort) => {
   return sortStage;
 };
 
+/**
+ * Check if termination of payment already used by registration profile
+ * @param {string} terminationOfPaymentId
+ * @return {boolean}
+ */
+const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationOfPaymentId) => {
+  const registrationProfileId = await RegistrationProfile.distinct('termination_of_payment_id', {
+    termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId),
+  });
+
+  return registrationProfileId.length > 0;
+};
+
+/**
+ * check if termination of payment already used by billing
+ * @param {string} terminationOfPaymentId
+ * @returns {number}
+ */
+const CheckIfTerminationOfPaymentUsedByBilling = async (terminationOfPaymentId) => {
+  const registrationProfile = await RegistrationProfile.findOne(
+    { termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId) },
+    { _id: 1 }
+  );
+
+  if (!registrationProfile) {
+    return false;
+  }
+
+  const billingExist = await Billing.distinct('registration_profile_id', {
+    registration_profile_id: ConvertToObjectId(registrationProfile._id),
+  });
+
+  return billingExist.length > 0;
+};
+
 module.exports = {
   CreatePipelineMatchStage,
   CreateSortPipeline,
+  CheckIfTerminationOfPaymentUsedByRegistrationProfile,
+  CheckIfTerminationOfPaymentUsedByBilling,
 };

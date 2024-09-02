@@ -7,7 +7,12 @@ const { AmountCannotBeMinus, AmountMustHaveMaxTwoDecimal } = require('../../util
 const { TrimString } = require('../../utils/string.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
-const { CreatePipelineMatchStage, CreateSortPipeline } = require('./termination_of_payment.helper');
+const {
+  CreatePipelineMatchStage,
+  CreateSortPipeline,
+  CheckIfTerminationOfPaymentUsedByRegistrationProfile,
+  CheckIfTerminationOfPaymentUsedByBilling,
+} = require('./termination_of_payment.helper');
 
 // *************** IMPORT VALIDATOR ***************
 const { ValidateTerminationOfPaymentInput, ValidatePagination } = require('./termination_of_payment.validator');
@@ -140,6 +145,12 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
     //*************** amount cannot be minus
     AmountCannotBeMinus(args.additional_cost);
 
+    //*************** cannot update terminnation of payment because generated billing use this termination of payment
+    const usedByBilling = CheckIfTerminationOfPaymentUsedByBilling(args._id);
+    if (usedByBilling) {
+      throw new Error('cannot update termination of payment because already used by billing');
+    }
+
     const updatedTerminationOfPayment = await TerminationOfPayment.findByIdAndUpdate(
       args._id,
       {
@@ -173,6 +184,18 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
 const DeleteTerminationOfPayment = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
+
+    //*************** cannot delete termination of payment if already used by registration profile
+    const usedByRegistrationProfile = CheckIfTerminationOfPaymentUsedByRegistrationProfile(args._id);
+    if (usedByRegistrationProfile) {
+      throw new Error('cannot delete termination of payment because already used registration profile');
+    }
+
+    //*************** cannot update terminnation of payment because generated billing use this termination of payment
+    const usedByBilling = CheckIfTerminationOfPaymentUsedByBilling(args._id);
+    if (usedByBilling) {
+      throw new Error('cannot delete termination of payment because already used by billing');
+    }
 
     const deletedTerminationOfPayment = await TerminationOfPayment.findByIdAndDelete(args._id);
     if (!deletedTerminationOfPayment) {
