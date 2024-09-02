@@ -40,106 +40,133 @@ const { ValidatePayer, ValidatePagination } = require('./billing.validator');
  * @returns {Promise<Object>}
  */
 const GetAllBillings = async (_parent, { filter, sort, pagination }, { models }) => {
-  const { page = 1, limit = 10 } = pagination;
-  ValidatePagination(page, limit);
+  try {
+    const { page = 1, limit = 10 } = pagination;
+    ValidatePagination(page, limit);
 
-  //*************** base pipeline
-  const pipeline = [];
+    //*************** base pipeline
+    const pipeline = [];
 
-  //*************** check if need to lookup to student collection
-  const needToStudentLookup = (filter && filter.student_full_name) || (sort && sort.student_full_name);
+    //*************** check if need to lookup to student collection
+    const needToStudentLookup = (filter && filter.student_full_name) || (sort && sort.student_full_name);
 
-  //*************** check if need to lookup to payer (can be student or financial support)
-  const needToPayerLookup = (filter && filter.payer_full_name) || (sort && sort.payer_full_name);
+    //*************** check if need to lookup to payer (can be student or financial support)
+    const needToPayerLookup = (filter && filter.payer_full_name) || (sort && sort.payer_full_name);
 
-  //*************** check if need to lookup to termination of payment
-  const needToTerminationOfPaymentLookup = (filter && filter.termination) || (sort && sort.termination);
+    //*************** check if need to lookup to termination of payment
+    const needToTerminationOfPaymentLookup = (filter && filter.termination) || (sort && sort.termination);
 
-  // *************** add field if need concatenated name
-  const addFieldStage = {
-    $addFields: {},
-  };
-
-  if (needToStudentLookup) {
-    //*************** lookup to student collection
-    const studentLookupStage = CreateLookupPipelineStage('students', 'student_id', '_id', 'student', true);
-    pipeline.push(...studentLookupStage);
-
-    //*************** concat student name for filtering or sorting purpose
-    const concatenatedStudentName = CreateConcatPipelineStage('$student.first_name', '$student.last_name');
-    addFieldStage.$addFields.student_full_name = concatenatedStudentName;
-  }
-
-  if (needToPayerLookup) {
-    //*************** if payer is student
-    const payerIsStudentLookupStage = CreateLookupPipelineStage('students', 'payer', '_id', 'payer_student');
-    pipeline.push(...payerIsStudentLookupStage);
-
-    //*************** if payer is financial support
-    const payerIsFinancialSupportLookupStage = CreateLookupPipelineStage('financial_supports', 'payer', '_id', 'payer_financial_support');
-    pipeline.push(...payerIsFinancialSupportLookupStage);
-
-    //*************** conditional concatenatted payer full name based on payer (student or financial support)
-    addFieldStage.$addFields.payer_full_name = {
-      $cond: {
-        if: { $gt: [{ $size: '$payer_student' }, 0] },
-        then: { $concat: [{ $arrayElemAt: ['$payer_student.first_name', 0] }, ' ', { $arrayElemAt: ['$payer_student.last_name', 0] }] },
-        else: {
-          $concat: [
-            { $arrayElemAt: ['$payer_financial_support.first_name', 0] },
-            ' ',
-            { $arrayElemAt: ['$payer_financial_support.last_name', 0] },
-          ],
-        },
-      },
+    // *************** add field if need concatenated name
+    const addFieldStage = {
+      $addFields: {},
     };
+
+    if (needToStudentLookup) {
+      //*************** lookup to student collection
+      const studentLookupStage = CreateLookupPipelineStage('students', 'student_id', '_id', 'student', true);
+      pipeline.push(...studentLookupStage);
+
+      //*************** concat student name for filtering or sorting purpose
+      const concatenatedStudentName = CreateConcatPipelineStage('$student.first_name', '$student.last_name');
+      addFieldStage.$addFields.student_full_name = concatenatedStudentName;
+    }
+
+    if (needToPayerLookup) {
+      //*************** if payer is student
+      const payerIsStudentLookupStage = CreateLookupPipelineStage('students', 'payer', '_id', 'payer_student');
+      pipeline.push(...payerIsStudentLookupStage);
+
+      //*************** if payer is financial support
+      const payerIsFinancialSupportLookupStage = CreateLookupPipelineStage('financial_supports', 'payer', '_id', 'payer_financial_support');
+      pipeline.push(...payerIsFinancialSupportLookupStage);
+
+      //*************** conditional concatenatted payer full name based on payer (student or financial support)
+      addFieldStage.$addFields.payer_full_name = {
+        $cond: {
+          if: { $gt: [{ $size: '$payer_student' }, 0] },
+          then: { $concat: [{ $arrayElemAt: ['$payer_student.first_name', 0] }, ' ', { $arrayElemAt: ['$payer_student.last_name', 0] }] },
+          else: {
+            $concat: [
+              { $arrayElemAt: ['$payer_financial_support.first_name', 0] },
+              ' ',
+              { $arrayElemAt: ['$payer_financial_support.last_name', 0] },
+            ],
+          },
+        },
+      };
+    }
+
+    if (needToTerminationOfPaymentLookup) {
+      //*************** lookup to registration profile collection
+      const registrationProfileLookupStage = CreateLookupPipelineStage(
+        'registration_profiles',
+        'registration_profile_id',
+        '_id',
+        'registration_profile',
+        true
+      );
+      pipeline.push(...registrationProfileLookupStage);
+
+      //*************** after get registration profile then lookup to termination of payment
+      const terminationOfPaymentLookupStage = CreateLookupPipelineStage(
+        'termination_of_payments',
+        'registration_profile.termination_of_payment_id',
+        '_id',
+        'termination_of_payment',
+        true
+      );
+      pipeline.push(...terminationOfPaymentLookupStage);
+    }
+
+    //*************** push $addField stage to pipeline if contain any additional field
+    if (Object.keys(addFieldStage.$addFields).length > 0) {
+      pipeline.push(addFieldStage);
+    }
+
+    //*************** filtering based on existing params
+    const matchStage = CreateMatchPipelineStage(filter);
+    if (Object.keys(matchStage).length > 0) {
+      pipeline.push({ $match: matchStage });
+    }
+
+    //*************** sorting based on existing params
+    const sortStage = CreateSortPipelineStage(sort);
+    if (Object.keys(sortStage).length > 0) {
+      pipeline.push({ $sort: sortStage });
+    }
+
+    // *************** pagination stage
+    pipeline.push({ $skip: (page - 1) * limit });
+    pipeline.push({ $limit: limit });
+
+    const billings = await models.billing.aggregate(pipeline);
+    return billings;
+  } catch (error) {
+    throw new Error(`Failed to fetch all billings: ${error.message}`);
   }
+};
 
-  if (needToTerminationOfPaymentLookup) {
-    //*************** lookup to registration profile collection
-    const registrationProfileLookupStage = CreateLookupPipelineStage(
-      'registration_profiles',
-      'registration_profile_id',
-      '_id',
-      'registration_profile',
-      true
-    );
-    pipeline.push(...registrationProfileLookupStage);
+/**
+ * Get one student document by id
+ * @param {Object} _parent
+ * @param {Object} args
+ * @param {string} args._id
+ * @param {Object} context
+ * @param {Object} context.models
+ */
+const GetOneBilling = async (_parent, args, { models }) => {
+  try {
+    CheckObjectId(args._id);
 
-    //*************** after get registration profile then lookup to termination of payment
-    const terminationOfPaymentLookupStage = CreateLookupPipelineStage(
-      'termination_of_payments',
-      'registration_profile.termination_of_payment_id',
-      '_id',
-      'termination_of_payment',
-      true
-    );
-    pipeline.push(...terminationOfPaymentLookupStage);
+    const billing = await models.billing.findById(args._id);
+    if (!billing) {
+      throw new Error('Billing not found');
+    }
+
+    return billing;
+  } catch (error) {
+    throw new Error(`Failed to fetch billing by id: ${error.message}`);
   }
-
-  //*************** push $addField stage to pipeline if contain any additional field
-  if (Object.keys(addFieldStage.$addFields).length > 0) {
-    pipeline.push(addFieldStage);
-  }
-
-  //*************** filtering based on existing params
-  const matchStage = CreateMatchPipelineStage(filter);
-  if (Object.keys(matchStage).length > 0) {
-    pipeline.push({ $match: matchStage });
-  }
-
-  //*************** sorting based on existing params
-  const sortStage = CreateSortPipelineStage(sort);
-  if (Object.keys(sortStage).length > 0) {
-    pipeline.push({ $sort: sortStage });
-  }
-
-  // *************** pagination stage
-  pipeline.push({ $skip: (page - 1) * limit });
-  pipeline.push({ $limit: limit });
-
-  const billings = await models.billing.aggregate(pipeline);
-  return billings;
 };
 
 // *************** MUTATION ***************
@@ -421,6 +448,7 @@ const GetPayer = async (parent, _args, { loaders }) => {
 const billingResolver = {
   Query: {
     GetAllBillings,
+    GetOneBilling,
   },
 
   Mutation: {

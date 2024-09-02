@@ -54,6 +54,7 @@ const billing = gql`
   # query
   type Query {
     GetAllBillings(filter: BillingFilterInput, sort: BillingSortInput, pagination: BillingPaginationInput!): [Billing]!
+    GetOneBilling(_id: ID!): Billing!
   }
 
   # mutations
