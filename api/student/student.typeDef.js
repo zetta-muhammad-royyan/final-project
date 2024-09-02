@@ -12,21 +12,7 @@ const student = gql`
     registration_profile: RegistrationProfile!
   }
 
-  type FinancialSupport {
-    _id: ID!
-    civility: String!
-    first_name: String!
-    last_name: String!
-    student_id: ID!
-  }
-
   # input
-  input FinancialSupportInput {
-    civility: String!
-    first_name: String!
-    last_name: String!
-  }
-
   input StudentFilterInput {
     student_full_name: String
     registration_profile_id: ID
@@ -44,6 +30,13 @@ const student = gql`
     limit: Int!
   }
 
+  #enums
+  enum StudentCivility {
+    mr
+    mrs
+    neutral
+  }
+
   # queries
   type Query {
     GetAllStudents(filter: StudentFilterInput, sort: StudentSortInput, pagination: StudentPaginationInput): [Student]!
@@ -53,7 +46,7 @@ const student = gql`
   # mutations
   type Mutation {
     CreateStudent(
-      civility: String!
+      civility: StudentCivility!
       first_name: String!
       last_name: String
       financial_support: [FinancialSupportInput]!
@@ -61,7 +54,7 @@ const student = gql`
     ): Student!
     UpdateStudent(
       _id: ID!
-      civility: String!
+      civility: StudentCivility!
       first_name: String!
       last_name: String
       financial_support: [FinancialSupportInput]

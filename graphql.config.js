@@ -20,6 +20,7 @@ module.exports = {
     billing.typeDef,
     term.typeDef,
     deposit.typeDef,
+    financialSupport.typeDef,
   ]),
   context: {
     models: {
