@@ -1,6 +1,3 @@
-// *************** IMPORT LIBRARY ***************
-const mongoose = require('mongoose');
-
 // *************** IMPORT MODULE ***************
 const RegistrationProfile = require('./registration_profile.model');
 
@@ -11,7 +8,12 @@ const { AmountMustHaveMaxTwoDecimal, AmountCannotBeMinus } = require('../../util
 const { TrimString } = require('../../utils/string.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
-const { CreatePipelineMatchStage, CreatePipelineSortStage } = require('./registration_profile.helper');
+const {
+  CreatePipelineMatchStage,
+  CreatePipelineSortStage,
+  CheckIfRegistrationProfileUsedByBilling,
+  CheckIfRegistrationProfileUsedByStudent,
+} = require('./registration_profile.helper');
 
 // *************** IMPORT VALIDATOR ***************
 const { ValidatePagination } = require('./registration_profile.validator');
@@ -172,6 +174,12 @@ const UpdateRegistrationProfile = async (_parent, args) => {
     AmountCannotBeMinus(args.deposit);
     AmountCannotBeMinus(args.registration_fee);
 
+    //*************** cannot update registration profile if already used by billing
+    const usedByBilling = CheckIfRegistrationProfileUsedByBilling(args._id);
+    if (usedByBilling) {
+      throw new Error('cannot update registration profile because already used by billing');
+    }
+
     const updatedRegistrationProfiles = await RegistrationProfile.findByIdAndUpdate(
       args._id,
       {
@@ -201,8 +209,18 @@ const UpdateRegistrationProfile = async (_parent, args) => {
  */
 const DeleteRegistrationProfile = async (_parent, args) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(args._id)) {
-      throw new Error('Invalid ID format');
+    CheckObjectId(args._id);
+
+    //*************** cannot delete registration profile if already used by student
+    const usedByStudent = CheckIfRegistrationProfileUsedByStudent(args._id);
+    if (usedByStudent) {
+      throw new Error('cannot delete registration profile because already used by student');
+    }
+
+    //*************** cannot delete registration profile if already used by billing
+    const usedByBilling = CheckIfRegistrationProfileUsedByBilling(args._id);
+    if (usedByBilling) {
+      throw new Error('cannot delete registration profile because already used by billing');
     }
 
     const deletedRegistrationProfiles = await RegistrationProfile.findByIdAndDelete(args._id);
