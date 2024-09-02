@@ -5,6 +5,7 @@ const {
   CreateConcatPipelineStage,
   CreateSortPipelineStage,
   CreateMatchPipelineStage,
+  CheckIfStudentUsedByBilling,
 } = require('./student.helper');
 
 // *************** IMPORT UTILITIES ***************
@@ -222,6 +223,12 @@ const UpdateStudent = async (_parent, args, { models }) => {
     ValidateStudentInput(args.civility, args.first_name, args.last_name);
     CheckObjectId(args._id);
 
+    //*************** cannot update registration profile if already used by billing
+    const usedByBilling = CheckIfStudentUsedByBilling(args._id);
+    if (usedByBilling) {
+      throw new Error('cannot update student because already used by billing');
+    }
+
     //*************** fetch student
     const student = await models.student.findById(args._id);
 
@@ -253,6 +260,12 @@ const UpdateStudent = async (_parent, args, { models }) => {
 const DeleteStudent = async (_parent, args, { models }) => {
   try {
     CheckObjectId(args._id);
+
+    //*************** cannot update registration profile if already used by billing
+    const usedByBilling = CheckIfStudentUsedByBilling(args._id);
+    if (usedByBilling) {
+      throw new Error('cannot delete student because already used by billing');
+    }
 
     const deletedStudent = await models.student.findByIdAndDelete(args._id);
     if (!deletedStudent) {

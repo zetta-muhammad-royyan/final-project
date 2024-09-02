@@ -1,3 +1,6 @@
+// *************** IMPORT MODULE ***************
+const Billing = require('../billing/billing.model');
+
 // *************** IMPORT UTILITIES ***************
 const { ConvertToObjectId } = require('../../utils/mongoose.utils');
 
@@ -93,9 +96,23 @@ const CreateMatchPipelineStage = (filter) => {
   return matchStage;
 };
 
+/**
+ * check if student already have billing or not
+ * @param {string} studentId
+ * @returns {boolean}
+ */
+const CheckIfStudentUsedByBilling = async (studentId) => {
+  const billingExist = await Billing.distinct('student_id', {
+    student_id: ConvertToObjectId(studentId),
+  });
+
+  return billingExist.length > 0;
+};
+
 module.exports = {
   CreateLookupPipelineStage,
   CreateConcatPipelineStage,
   CreateSortPipelineStage,
   CreateMatchPipelineStage,
+  CheckIfStudentUsedByBilling,
 };
