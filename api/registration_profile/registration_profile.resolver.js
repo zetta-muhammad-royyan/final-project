@@ -43,13 +43,13 @@ const GetAllRegistrationProfiles = async (_parent, { filter, sort, pagination })
     //*************** $match stage, only active when filter contain data
     const matchStage = CreatePipelineMatchStage(filter);
     if (Object.keys(matchStage).length > 0) {
-      pipeline.push(matchStage);
+      pipeline.push({ $match: matchStage });
     }
 
     //*************** $sort stage, only active when sort contain data
     const sortStage = CreatePipelineSortStage(sort);
     if (Object.keys(sortStage).length > 0) {
-      pipeline.push(sortStage);
+      pipeline.push({ $sort: sortStage });
     }
 
     //*************** pagination pipeline, with $skip and $limit

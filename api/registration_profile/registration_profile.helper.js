@@ -1,3 +1,6 @@
+// *************** IMPORT UTILITIES ***************
+const { ConvertToObjectId } = require('../../utils/mongoose.utils');
+
 /**
  * @param {Object} filter
  * @param {string} filter.registration_profile_name
@@ -11,7 +14,7 @@ const CreatePipelineMatchStage = (filter) => {
       matchStage.registration_profile_name = { $regex: filter.registration_profile_name, $options: 'i' };
     }
     if (filter.termination_of_payment_id !== undefined) {
-      matchStage.termination_of_payment_id = filter.termination_of_payment_id;
+      matchStage.termination_of_payment_id = ConvertToObjectId(filter.termination_of_payment_id);
     }
   }
 
