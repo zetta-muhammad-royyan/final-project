@@ -8,9 +8,15 @@ const deposit = gql`
     billing: Billing!
     date: String!
     amount: Float!
-    payment_status: String!
+    payment_status: DepositPaymentStatus!
     amount_paid: Float!
     remaining_amount: Float!
+  }
+
+  enum DepositPaymentStatus {
+    billed
+    partial_paid
+    paid
   }
 `;
 

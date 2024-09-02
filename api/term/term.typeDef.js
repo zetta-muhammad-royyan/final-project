@@ -8,9 +8,16 @@ const term = gql`
     billing: Billing!
     date: String!
     amount: Float!
-    payment_status: String!
+    payment_status: TermPaymentStatus!
     amount_paid: Float!
     remaining_amount: Float!
+  }
+
+  # enums
+  enum TermPaymentStatus {
+    billed
+    partial_paid
+    paid
   }
 `;
 
