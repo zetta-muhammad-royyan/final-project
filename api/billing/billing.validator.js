@@ -28,9 +28,12 @@ const ValidatePaymentType = (paymentType, payerIncludeStudent, payerIncludeFinan
  * Validate payer
  * @param {Array<{payer_id: String, cost_coverage: Number}>} payer
  * @param {String} paymentType
+ * @param {Object} student
+ * @param {string} student._id
+ * @param {Array<string>} student.financial_support_ids
  * @returns {Array<{payer_id: String, cost_coverage: Number, type: String}>}
  */
-const ValidatePayer = async (payer, paymentType) => {
+const ValidatePayer = async (payer, paymentType, student) => {
   const validatedPayer = [];
   let payerIncludeStudent = false;
   let payerIncludeFinancialSupport = false;
@@ -39,6 +42,11 @@ const ValidatePayer = async (payer, paymentType) => {
   ValidatePayerIdMustBeUnique(payer);
 
   for (let i = 0; i < payer.length; i++) {
+    //*************** payer must be a financial support for the student or the student it self
+    if (!student.financial_support_ids.includes(payer[i].payer_id) && student._id != payer[i].payer_id) {
+      throw new Error('payer must be a financial support that belong to student or the student it self');
+    }
+
     // *************** check if payer is FinancialSupport
     const payerIsFinancialSupport = await FinancialSupport.findOne({ _id: payer[i].payer_id });
     if (payerIsFinancialSupport) {

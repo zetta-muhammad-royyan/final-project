@@ -212,7 +212,7 @@ const GenerateBilling = async (_parent, args, { models }) => {
   const termAmount = totalAmount - registrationProfile.deposit;
 
   // *************** validate payer
-  const validatedPayer = await ValidatePayer(args.payer, args.payment_type);
+  const validatedPayer = await ValidatePayer(args.payer, args.payment_type, student);
 
   //*************** generate billing according to the number of payers
   const billings = await GenerateBillingBasedOnPayer(
