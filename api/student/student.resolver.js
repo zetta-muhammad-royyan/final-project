@@ -195,7 +195,9 @@ const CreateStudent = async (_parent, args, { models }) => {
     // *************** Update student financial_support_ids with new one
     createdStudent.financial_support_ids = financialSupportIds;
 
-    return await createdStudent.save();
+    const updatedStudent = await createdStudent.save();
+
+    return updatedStudent;
   } catch (error) {
     throw new Error(`Failed to create Student: ${error.message}`);
   }
@@ -242,7 +244,9 @@ const UpdateStudent = async (_parent, args, { models }) => {
     student.financial_support_ids = financialSupportIds;
     student.registration_profile_id = args.registration_profile_id;
 
-    return await student.save();
+    const updatedStudent = await student.save();
+
+    return updatedStudent;
   } catch (error) {
     throw new Error(`Failed to update Student: ${error.message}`);
   }

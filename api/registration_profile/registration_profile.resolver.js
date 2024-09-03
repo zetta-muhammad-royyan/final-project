@@ -58,7 +58,9 @@ const GetAllRegistrationProfiles = async (_parent, { filter, sort, pagination })
     //*************** pagination pipeline, with $skip and $limit
     pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
 
-    return await RegistrationProfile.aggregate(pipeline);
+    const registrationProfiles = await RegistrationProfile.aggregate(pipeline);
+
+    return registrationProfiles;
   } catch (error) {
     throw new Error(`Failed to fetch RegistrationProfiles: ${error.message}`);
   }
@@ -133,7 +135,9 @@ const CreateRegistrationProfile = async (_parent, args) => {
       termination_of_payment_id: args.termination_of_payment_id,
     });
 
-    return await newRegistrationProfile.save();
+    const updatedRegistrationProfile = await newRegistrationProfile.save();
+
+    return updatedRegistrationProfile;
   } catch (error) {
     throw new Error(`Failed to create RegistrationProfiles: ${error.message}`);
   }

@@ -58,7 +58,8 @@ const GetAllTerminationOfPayments = async (_parent, { filter, sort, pagination }
     //*************** pagination pipeline with $skip and $limit
     pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
 
-    return await TerminationOfPayment.aggregate(pipeline);
+    const terminationOfPayments = await TerminationOfPayment.aggregate(pipeline);
+    return terminationOfPayments;
   } catch (error) {
     throw new Error(`Failed to fetch TerminationOfPayments: ${error.message}`);
   }
@@ -116,7 +117,9 @@ const CreateTerminationOfPayment = async (_parent, args) => {
       additional_cost: args.additional_cost,
     });
 
-    return await newTerminationOfPayment.save();
+    const createdTerminationOfPayment = await newTerminationOfPayment.save();
+
+    return createdTerminationOfPayment;
   } catch (error) {
     throw new Error(`Failed to create TerminationOfPayment: ${error.message}`);
   }
