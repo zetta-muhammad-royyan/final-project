@@ -175,7 +175,7 @@ const UpdateRegistrationProfile = async (_parent, args) => {
     AmountCannotBeMinus(args.registration_fee);
 
     //*************** cannot update registration profile if already used by billing
-    const usedByBilling = CheckIfRegistrationProfileUsedByBilling(args._id);
+    const usedByBilling = await CheckIfRegistrationProfileUsedByBilling(args._id);
     if (usedByBilling) {
       throw new Error('cannot update registration profile because already used by billing');
     }
@@ -212,13 +212,13 @@ const DeleteRegistrationProfile = async (_parent, args) => {
     CheckObjectId(args._id);
 
     //*************** cannot delete registration profile if already used by student
-    const usedByStudent = CheckIfRegistrationProfileUsedByStudent(args._id);
+    const usedByStudent = await CheckIfRegistrationProfileUsedByStudent(args._id);
     if (usedByStudent) {
       throw new Error('cannot delete registration profile because already used by student');
     }
 
     //*************** cannot delete registration profile if already used by billing
-    const usedByBilling = CheckIfRegistrationProfileUsedByBilling(args._id);
+    const usedByBilling = await CheckIfRegistrationProfileUsedByBilling(args._id);
     if (usedByBilling) {
       throw new Error('cannot delete registration profile because already used by billing');
     }

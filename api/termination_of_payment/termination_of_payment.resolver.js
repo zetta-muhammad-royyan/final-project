@@ -146,7 +146,7 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
     AmountCannotBeMinus(args.additional_cost);
 
     //*************** cannot update terminnation of payment because generated billing use this termination of payment
-    const usedByBilling = CheckIfTerminationOfPaymentUsedByBilling(args._id);
+    const usedByBilling = await CheckIfTerminationOfPaymentUsedByBilling(args._id);
     if (usedByBilling) {
       throw new Error('cannot update termination of payment because already used by billing');
     }
@@ -186,13 +186,13 @@ const DeleteTerminationOfPayment = async (_parent, args) => {
     CheckObjectId(args._id);
 
     //*************** cannot delete termination of payment if already used by registration profile
-    const usedByRegistrationProfile = CheckIfTerminationOfPaymentUsedByRegistrationProfile(args._id);
+    const usedByRegistrationProfile = await CheckIfTerminationOfPaymentUsedByRegistrationProfile(args._id);
     if (usedByRegistrationProfile) {
-      throw new Error('cannot delete termination of payment because already used registration profile');
+      throw new Error('cannot delete termination of payment because already used by registration profile');
     }
 
     //*************** cannot update terminnation of payment because generated billing use this termination of payment
-    const usedByBilling = CheckIfTerminationOfPaymentUsedByBilling(args._id);
+    const usedByBilling = await CheckIfTerminationOfPaymentUsedByBilling(args._id);
     if (usedByBilling) {
       throw new Error('cannot delete termination of payment because already used by billing');
     }

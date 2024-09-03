@@ -224,7 +224,7 @@ const UpdateStudent = async (_parent, args, { models }) => {
     CheckObjectId(args._id);
 
     //*************** cannot update registration profile if already used by billing
-    const usedByBilling = CheckIfStudentUsedByBilling(args._id);
+    const usedByBilling = await CheckIfStudentUsedByBilling(args._id);
     if (usedByBilling) {
       throw new Error('cannot update student because already used by billing');
     }
@@ -262,7 +262,7 @@ const DeleteStudent = async (_parent, args, { models }) => {
     CheckObjectId(args._id);
 
     //*************** cannot update registration profile if already used by billing
-    const usedByBilling = CheckIfStudentUsedByBilling(args._id);
+    const usedByBilling = await CheckIfStudentUsedByBilling(args._id);
     if (usedByBilling) {
       throw new Error('cannot delete student because already used by billing');
     }
