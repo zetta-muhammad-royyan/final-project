@@ -51,11 +51,11 @@ const CreateSortPipeline = (sort) => {
  * @return {boolean}
  */
 const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationOfPaymentId) => {
-  const registrationProfileId = await RegistrationProfile.distinct('termination_of_payment_id', {
+  const registrationProfileExists = await RegistrationProfile.countDocuments({
     termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId),
   });
 
-  return registrationProfileId.length > 0;
+  return registrationProfileExists > 0;
 };
 
 /**
@@ -73,11 +73,11 @@ const CheckIfTerminationOfPaymentUsedByBilling = async (terminationOfPaymentId) 
     return false;
   }
 
-  const billingExist = await Billing.distinct('registration_profile_id', {
+  const billingExist = await Billing.countDocuments({
     registration_profile_id: ConvertToObjectId(registrationProfile._id),
   });
 
-  return billingExist.length > 0;
+  return billingExist > 0;
 };
 
 module.exports = {

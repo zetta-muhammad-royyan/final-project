@@ -102,11 +102,9 @@ const CreateMatchPipelineStage = (filter) => {
  * @returns {boolean}
  */
 const CheckIfStudentUsedByBilling = async (studentId) => {
-  const billingExist = await Billing.distinct('student_id', {
-    student_id: ConvertToObjectId(studentId),
-  });
+  const billingExist = await Billing.countDocuments({ student_id: ConvertToObjectId(studentId) });
 
-  return billingExist.length > 0;
+  return billingExist > 0;
 };
 
 module.exports = {

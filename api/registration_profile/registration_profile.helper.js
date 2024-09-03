@@ -50,11 +50,9 @@ const CreatePipelineSortStage = (sort) => {
  * @returns {boolean}
  */
 const CheckIfRegistrationProfileUsedByStudent = async (registrationProfileId) => {
-  const studentExist = await Student.distinct('registration_profile_id', {
-    registration_profile_id: ConvertToObjectId(registrationProfileId),
-  });
+  const studentExist = await Student.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
 
-  return studentExist.length > 0;
+  return studentExist > 0;
 };
 
 /**
@@ -63,11 +61,9 @@ const CheckIfRegistrationProfileUsedByStudent = async (registrationProfileId) =>
  * @returns {boolean}
  */
 const CheckIfRegistrationProfileUsedByBilling = async (registrationProfileId) => {
-  const billingExist = await Billing.distinct('registration_profile_id', {
-    registration_profile_id: ConvertToObjectId(registrationProfileId),
-  });
+  const billingExist = await Billing.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
 
-  return billingExist.length > 0;
+  return billingExist > 0;
 };
 
 module.exports = {
