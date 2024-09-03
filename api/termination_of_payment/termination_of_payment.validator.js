@@ -41,8 +41,8 @@ const ValidateTermPayment = (term_payments) => {
     if (i !== 0) {
       //*************** payment date must greater than previous date in an array
       const previousDate = moment(term_payments[i - 1].payment_date, 'DD-MM-YYYY', true);
-      if (currentDate.isBefore(previousDate)) {
-        throw new Error('the next payment_date cannot be less than previous payment_date');
+      if (currentDate.isSameOrBefore(previousDate)) {
+        throw new Error('the next payment_date cannot be less than or same with previous payment_date');
       }
     }
 
