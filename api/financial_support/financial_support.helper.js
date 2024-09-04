@@ -18,7 +18,18 @@ const { ValidateFinancialSupportInput } = require('./financial_support.validator
  * @param {String} financial_support.last_name
  * @returns {Array<String>}
  */
-const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => {
+const AddOrReplaceFinancialSupport = async (student, financialSupports) => {
+  //*************** if student doesnt change their financial support
+  if (!financialSupports) {
+    return student.financial_support_ids;
+  }
+
+  //*************** if student send empty array of financial support, it means delete all financial support
+  if (Array.isArray(financialSupports) && financialSupports.length === 0 && student.financial_support_ids.length > 0) {
+    await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
+    return [];
+  }
+
   const financialSupportsData = [];
 
   // *************** loop all FinancialSupport and do checking
@@ -34,13 +45,8 @@ const AddOrReplaceFinancialSupport = async (student, financialSupports = []) => 
   }
 
   // *************** delete existing financial support if any
-  if (student.financial_support_ids.length != 0 && financialSupports.length != 0) {
+  if (student.financial_support_ids.length !== 0 && financialSupports.length !== 0) {
     await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
-  }
-
-  // *************** student didnt change their financial supports
-  if (student.financial_support_ids.length > 0 && financialSupports.length === 0) {
-    return student.financial_support_ids;
   }
 
   const newFinancialSupports = await FinancialSupport.insertMany(financialSupportsData);

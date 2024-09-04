@@ -20,15 +20,15 @@ const ValidatePagination = (page, limit) => {
  */
 const ValidateStudentInput = (civility, firstName, lastName) => {
   if (IsEmptyString(civility)) {
-    throw new Error('civility cannot be empty string');
+    throw new Error('student civility cannot be empty string');
   }
 
   if (IsEmptyString(firstName)) {
-    throw new Error('civility cannot be empty string');
+    throw new Error('student first name cannot be empty string');
   }
 
   if (IsEmptyString(lastName)) {
-    throw new Error('civility cannot be empty string');
+    throw new Error('student last name cannot be empty string');
   }
 
   ValidateCivility(civility);

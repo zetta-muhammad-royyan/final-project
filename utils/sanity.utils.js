@@ -13,9 +13,13 @@ const IsNull = (input) => {
 /**
  * Check if given input is empty string or not
  * @param {string} input
- * @returns {}
+ * @returns {boolean}
  */
 const IsEmptyString = (input) => {
+  if (typeof input !== 'string') {
+    return false;
+  }
+
   const trimmed = TrimString(input);
   return trimmed === '';
 };

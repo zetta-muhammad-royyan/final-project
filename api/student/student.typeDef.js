@@ -48,17 +48,17 @@ const student = gql`
     CreateStudent(
       civility: StudentCivility!
       first_name: String!
-      last_name: String
-      financial_support: [FinancialSupportInput]!
+      last_name: String!
+      financial_support: [FinancialSupportInput]
       registration_profile_id: ID!
     ): Student!
     UpdateStudent(
       _id: ID!
-      civility: StudentCivility!
-      first_name: String!
+      civility: StudentCivility
+      first_name: String
       last_name: String
       financial_support: [FinancialSupportInput]
-      registration_profile_id: ID!
+      registration_profile_id: ID
     ): Student!
     DeleteStudent(_id: ID!): String!
   }

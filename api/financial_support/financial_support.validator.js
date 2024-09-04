@@ -9,15 +9,15 @@ const { IsEmptyString } = require('../../utils/sanity.utils');
  */
 const ValidateFinancialSupportInput = (civility, firstName, lastName) => {
   if (IsEmptyString(civility)) {
-    throw new Error('civility cannot be empty string');
+    throw new Error('financial support civility cannot be empty string');
   }
 
   if (IsEmptyString(firstName)) {
-    throw new Error('civility cannot be empty string');
+    throw new Error('financial support first name cannot be empty string');
   }
 
   if (IsEmptyString(lastName)) {
-    throw new Error('civility cannot be empty string');
+    throw new Error('financial support last name cannot be empty string');
   }
 
   ValidateCivility(civility);

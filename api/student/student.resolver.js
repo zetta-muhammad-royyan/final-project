@@ -9,8 +9,9 @@ const {
 } = require('./student.helper');
 
 // *************** IMPORT UTILITIES ***************
-const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
+const { CheckObjectId } = require('../../utils/mongoose.utils');
 const { TrimString } = require('../../utils/string.utils');
+const { IsNull, IsEmptyString } = require('../../utils/sanity.utils');
 
 // *************** IMPORT VALIDATOR ***************
 const { ValidatePagination, ValidateStudentInput } = require('./student.validator');
@@ -222,27 +223,51 @@ const CreateStudent = async (_parent, args, { models }) => {
  */
 const UpdateStudent = async (_parent, args, { models }) => {
   try {
-    ValidateStudentInput(args.civility, args.first_name, args.last_name);
+    if (IsEmptyString(args.first_name)) {
+      throw new Error('student first name cannot be empty string');
+    }
+
+    if (IsEmptyString(args.last_name)) {
+      throw new Error('student last name cannot be empty string');
+    }
+
     CheckObjectId(args._id);
+
+    //*************** fetch student
+    const student = await models.student.findById(args._id);
+    if (!student) {
+      throw new Error('Student not found');
+    }
 
     //*************** cannot update registration profile if already used by billing
     const usedByBilling = await CheckIfStudentUsedByBilling(args._id);
     if (usedByBilling) {
-      throw new Error('cannot update student because already used by billing');
+      //*************** throw error if user want to edit financial support or regisration profile
+      if (
+        !IsNull(args.financial_support) ||
+        (Array.isArray(args.financial_support) && args.financial_support.length > 0) ||
+        !IsNull(args.registration_profile_id)
+      ) {
+        throw new Error('cannot update financial support or registration profile if billing already generated for this student');
+      }
+
+      student.civility = args.civility ? args.civility : student.civility;
+      student.first_name = args.first_name ? TrimString(args.first_name) : student.first_name;
+      student.last_name = args.last_name ? TrimString(args.last_name) : student.last_name;
+
+      const updatedStudent = await student.save();
+      return updatedStudent;
     }
 
-    //*************** fetch student
-    const student = await models.student.findById(args._id);
-
     //*************** add or replace student financial supports
-    const financialSupportIds = await AddOrReplaceFinancialSupport(student, args.financial_support || []);
+    const financialSupportIds = await AddOrReplaceFinancialSupport(student, args.financial_support);
 
     // *************** Update student with new data
-    student.civility = args.civility;
-    student.first_name = TrimString(args.first_name);
-    student.last_name = TrimString(args.last_name);
-    student.financial_support_ids = financialSupportIds;
-    student.registration_profile_id = args.registration_profile_id;
+    student.civility = args.civility ? args.civility : student.civility;
+    student.first_name = args.first_name ? TrimString(args.first_name) : student.first_name;
+    student.last_name = args.last_name ? TrimString(args.last_name) : student.last_name;
+    student.financial_support_ids = financialSupportIds.length > 0 ? financialSupportIds : student.financial_support_ids;
+    student.registration_profile_id = args.registration_profile_id ? args.registration_profile_id : student.registration_profile_id;
 
     const updatedStudent = await student.save();
 
@@ -271,8 +296,8 @@ const DeleteStudent = async (_parent, args, { models }) => {
       throw new Error('cannot delete student because already used by billing');
     }
 
-    const deletedStudent = await models.student.deleteOne({ _id: ConvertToObjectId(args._id) });
-    if (deletedStudent.deletedCount !== 1) {
+    const deletedStudent = await models.student.findByIdAndDelete(args._id, { financial_support_ids: 1 });
+    if (!deletedStudent) {
       throw new Error('Student not found');
     }
 
