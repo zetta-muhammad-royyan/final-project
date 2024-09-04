@@ -53,34 +53,38 @@ const CreateConcatPipelineStage = (field1, field2, separator = ' ') => {
  * @return {Object}
  */
 const CreateSortPipelineStage = (sort) => {
-  const sortStage = {};
-  if (sort) {
-    if (sort.registration_profile_name) {
-      if (!IsSortingInput(sort.registration_profile_name)) {
-        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+  try {
+    const sortStage = {};
+    if (sort) {
+      if (sort.registration_profile_name) {
+        if (!IsSortingInput(sort.registration_profile_name)) {
+          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        }
+
+        sortStage['registration_profile.name'] = sort.registration_profile_name;
       }
 
-      sortStage['registration_profile.name'] = sort.registration_profile_name;
-    }
+      if (sort.registration_profile_id) {
+        if (!IsSortingInput(sort.registration_profile_id)) {
+          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        }
 
-    if (sort.registration_profile_id) {
-      if (!IsSortingInput(sort.registration_profile_id)) {
-        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        sortStage.registration_profile_id = sort.registration_profile_id;
       }
 
-      sortStage.registration_profile_id = sort.registration_profile_id;
-    }
+      if (sort.financial_support_full_name) {
+        if (!IsSortingInput(sort.financial_support_full_name)) {
+          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        }
 
-    if (sort.financial_support_full_name) {
-      if (!IsSortingInput(sort.financial_support_full_name)) {
-        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        sortStage.financial_support_full_name = sort.financial_support_full_name;
       }
-
-      sortStage.financial_support_full_name = sort.financial_support_full_name;
     }
+
+    return sortStage;
+  } catch (error) {
+    throw new Error(`CreateSortPipelineStage error: ${error.message}`);
   }
-
-  return sortStage;
 };
 
 /**
@@ -115,9 +119,13 @@ const CreateMatchPipelineStage = (filter) => {
  * @returns {boolean}
  */
 const CheckIfStudentUsedByBilling = async (studentId) => {
-  const billingExist = await Billing.countDocuments({ student_id: ConvertToObjectId(studentId) });
+  try {
+    const billingExist = await Billing.countDocuments({ student_id: ConvertToObjectId(studentId) });
 
-  return billingExist > 0;
+    return billingExist > 0;
+  } catch (error) {
+    throw new Error(`CheckIfStudentUsedByBilling error: ${error.message}`);
+  }
 };
 
 module.exports = {

@@ -1,5 +1,7 @@
+const FinancialSupport = require('../financial_support/financial_support.model');
+
 // *************** IMPORT HELPER FUNCTION ***************
-const { AddOrReplaceFinancialSupport } = require('../financial_support/financial_support.helper');
+const { PrepareFinancialSupportData } = require('../financial_support/financial_support.helper');
 const {
   CreateLookupPipelineStage,
   CreateConcatPipelineStage,
@@ -190,10 +192,25 @@ const CreateStudent = async (_parent, args, { models }) => {
 
     let createdStudent = await newStudent.save();
 
-    // *************** Create Financial Support
-    const financialSupportIds = await AddOrReplaceFinancialSupport(createdStudent, args.financial_support);
+    const financialSupportData = PrepareFinancialSupportData(createdStudent, args.financial_support);
 
-    // *************** Update student financial_support_ids with new one
+    //*************** if no one data to be inserted then just return new created student
+    if (financialSupportData.newFinancialSupportsData.length === 0) {
+      return createdStudent;
+    }
+
+    //*************** if theres any financialSupport to be deleted
+    if (financialSupportData.idsToDelete.length > 0) {
+      await FinancialSupport.deleteMany({ _id: { $in: financialSupportData.idsToDelete } });
+    }
+
+    // *************** if any financial support then insert and update student with new FS id
+    let financialSupportIds = [];
+    if (financialSupportData.newFinancialSupportsData.length > 0) {
+      const insertedDocs = await FinancialSupport.insertMany(financialSupportData.newFinancialSupportsData, { lean: true });
+      financialSupportIds = insertedDocs.map((doc) => doc._id);
+    }
+
     createdStudent.financial_support_ids = financialSupportIds;
 
     const updatedStudent = await createdStudent.save();
@@ -259,8 +276,19 @@ const UpdateStudent = async (_parent, args, { models }) => {
       return updatedStudent;
     }
 
-    //*************** add or replace student financial supports
-    const financialSupportIds = await AddOrReplaceFinancialSupport(student, args.financial_support);
+    const financialSupportData = await PrepareFinancialSupportData(student, args.financial_support);
+
+    //*************** if theres any financialSupport to be deleted
+    if (financialSupportData.idsToDelete.length > 0) {
+      await FinancialSupport.deleteMany({ _id: { $in: financialSupportData.idsToDelete } });
+    }
+
+    // *************** if any financial support then insert and update student with new FS id
+    let financialSupportIds = [];
+    if (financialSupportData.newFinancialSupportsData.length > 0) {
+      const insertedDocs = await FinancialSupport.insertMany(financialSupportData.newFinancialSupportsData, { lean: true });
+      financialSupportIds = insertedDocs.map((doc) => doc._id);
+    }
 
     // *************** Update student with new data
     student.civility = args.civility ? args.civility : student.civility;

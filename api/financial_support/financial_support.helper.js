@@ -1,6 +1,3 @@
-// *************** IMPORT MODULE ***************
-const FinancialSupport = require('./financial_support.model');
-
 // *************** IMPORT UTILITIES ***************
 const { TrimString } = require('../../utils/string.utils');
 
@@ -8,7 +5,7 @@ const { TrimString } = require('../../utils/string.utils');
 const { ValidateFinancialSupportInput } = require('./financial_support.validator');
 
 /**
- * Add or replace financial support for student
+ * Prepare data to add or replace financial support for student
  * @param {Object} student
  * @param {String} student._id
  * @param {Array<String>} student.financial_support_ids
@@ -16,27 +13,36 @@ const { ValidateFinancialSupportInput } = require('./financial_support.validator
  * @param {String} financial_support.civility
  * @param {String} financial_support.first_name
  * @param {String} financial_support.last_name
- * @returns {Array<String>}
+ * @returns {Object} result
+ * @returns {Array<Object>} result.newFinancialSupportsData - Data for new financial supports to be inserted
+ * @returns {Array<String>} result.idsToDelete - IDs of financial supports to be deleted
  */
-const AddOrReplaceFinancialSupport = async (student, financialSupports) => {
-  //*************** if student doesnt change their financial support
+const PrepareFinancialSupportData = (student, financialSupports) => {
+  //*************** no one deleted, no one inserted
   if (!financialSupports) {
-    return student.financial_support_ids;
+    return {
+      newFinancialSupportsData: [],
+      idsToDelete: [],
+    };
   }
 
-  //*************** if student send empty array of financial support, it means delete all financial support
+  let idsToDelete = [];
+  let newFinancialSupportsData = [];
+
+  //*************** if financial supports array is empty, prepare to delete all existing supports
   if (Array.isArray(financialSupports) && financialSupports.length === 0 && student.financial_support_ids.length > 0) {
-    await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
-    return [];
+    idsToDelete = student.financial_support_ids;
+    return {
+      newFinancialSupportsData: [],
+      idsToDelete,
+    };
   }
 
-  const financialSupportsData = [];
-
-  // *************** loop all FinancialSupport and do checking
+  //*************** validate and prepare new financial supports data
   for (let i = 0; i < financialSupports.length; i++) {
     ValidateFinancialSupportInput(financialSupports[i].civility, financialSupports[i].first_name, financialSupports[i].last_name);
 
-    financialSupportsData.push({
+    newFinancialSupportsData.push({
       civility: financialSupports[i].civility,
       first_name: TrimString(financialSupports[i].first_name),
       last_name: TrimString(financialSupports[i].last_name),
@@ -44,18 +50,18 @@ const AddOrReplaceFinancialSupport = async (student, financialSupports) => {
     });
   }
 
-  // *************** delete existing financial support if any
-  if (student.financial_support_ids.length !== 0 && financialSupports.length !== 0) {
-    await FinancialSupport.deleteMany({ _id: { $in: student.financial_support_ids } });
+  //*************** if there are existing financial supports, prepare to delete them
+  if (student.financial_support_ids.length !== 0 && newFinancialSupportsData.length !== 0) {
+    idsToDelete = student.financial_support_ids;
   }
 
-  const newFinancialSupports = await FinancialSupport.insertMany(financialSupportsData);
-
-  // *************** return the ids FinancialSupport that just created
-  return newFinancialSupports.map((fs) => fs._id);
+  return {
+    newFinancialSupportsData,
+    idsToDelete,
+  };
 };
 
 // *************** EXPORT MODULE ***************
 module.exports = {
-  AddOrReplaceFinancialSupport,
+  PrepareFinancialSupportData,
 };

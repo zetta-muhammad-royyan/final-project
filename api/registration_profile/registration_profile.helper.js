@@ -33,26 +33,30 @@ const CreatePipelineMatchStage = (filter) => {
  * @param {number} sort.termination_of_payment_id
  */
 const CreatePipelineSortStage = (sort) => {
-  const sortStage = {};
-  if (sort) {
-    if (sort.registration_profile_name) {
-      if (!IsSortingInput(sort.registration_profile_name)) {
-        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+  try {
+    const sortStage = {};
+    if (sort) {
+      if (sort.registration_profile_name) {
+        if (!IsSortingInput(sort.registration_profile_name)) {
+          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        }
+
+        sortStage.registration_profile_name = sort.registration_profile_name;
       }
 
-      sortStage.registration_profile_name = sort.registration_profile_name;
-    }
+      if (sort.termination_of_payment_id) {
+        if (!IsSortingInput(sort.termination_of_payment_id)) {
+          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        }
 
-    if (sort.termination_of_payment_id) {
-      if (!IsSortingInput(sort.termination_of_payment_id)) {
-        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        sortStage.termination_of_payment_id = sort.termination_of_payment_id;
       }
-
-      sortStage.termination_of_payment_id = sort.termination_of_payment_id;
     }
+
+    return sortStage;
+  } catch (error) {
+    throw new Error(`CreatePipelineSortStage error: ${error.message}`);
   }
-
-  return sortStage;
 };
 
 /**
@@ -61,9 +65,13 @@ const CreatePipelineSortStage = (sort) => {
  * @returns {boolean}
  */
 const CheckIfRegistrationProfileUsedByStudent = async (registrationProfileId) => {
-  const studentExist = await Student.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
+  try {
+    const studentExist = await Student.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
 
-  return studentExist > 0;
+    return studentExist > 0;
+  } catch (error) {
+    throw new Error(`CheckIfRegistrationProfileUsedByStudent: ${error.message}`);
+  }
 };
 
 /**
@@ -72,9 +80,13 @@ const CheckIfRegistrationProfileUsedByStudent = async (registrationProfileId) =>
  * @returns {boolean}
  */
 const CheckIfRegistrationProfileUsedByBilling = async (registrationProfileId) => {
-  const billingExist = await Billing.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
+  try {
+    const billingExist = await Billing.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
 
-  return billingExist > 0;
+    return billingExist > 0;
+  } catch (error) {
+    throw new Error(`CheckIfRegistrationProfileUsedByBilling: ${error.message}`);
+  }
 };
 
 module.exports = {

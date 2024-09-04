@@ -34,25 +34,29 @@ const CreatePipelineMatchStage = (filter) => {
  * @returns {Object}
  */
 const CreateSortPipeline = (sort) => {
-  const sortStage = {};
-  if (sort) {
-    if (sort.description) {
-      if (!IsSortingInput(sort.description)) {
-        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
-      }
+  try {
+    const sortStage = {};
+    if (sort) {
+      if (sort.description) {
+        if (!IsSortingInput(sort.description)) {
+          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        }
 
-      sortStage.description = sort.description;
-    }
-    if (sort.termination) {
-      if (!IsSortingInput(sort.termination)) {
-        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        sortStage.description = sort.description;
       }
+      if (sort.termination) {
+        if (!IsSortingInput(sort.termination)) {
+          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+        }
 
-      sortStage.termination = sort.termination;
+        sortStage.termination = sort.termination;
+      }
     }
+
+    return sortStage;
+  } catch (error) {
+    throw new Error(`CreateSortPipeline error: ${error.message}`);
   }
-
-  return sortStage;
 };
 
 /**
@@ -61,11 +65,15 @@ const CreateSortPipeline = (sort) => {
  * @return {boolean}
  */
 const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationOfPaymentId) => {
-  const registrationProfileExists = await RegistrationProfile.countDocuments({
-    termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId),
-  });
+  try {
+    const registrationProfileExists = await RegistrationProfile.countDocuments({
+      termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId),
+    });
 
-  return registrationProfileExists > 0;
+    return registrationProfileExists > 0;
+  } catch (error) {
+    throw new Error(`CheckIfTerminationOfPaymentUsedByRegistrationProfile error: ${error.message}`);
+  }
 };
 
 /**
@@ -74,20 +82,24 @@ const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationO
  * @returns {number}
  */
 const CheckIfTerminationOfPaymentUsedByBilling = async (terminationOfPaymentId) => {
-  const registrationProfile = await RegistrationProfile.findOne(
-    { termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId) },
-    { _id: 1 }
-  );
+  try {
+    const registrationProfile = await RegistrationProfile.findOne(
+      { termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId) },
+      { _id: 1 }
+    );
 
-  if (!registrationProfile) {
-    return false;
+    if (!registrationProfile) {
+      return false;
+    }
+
+    const billingExist = await Billing.countDocuments({
+      registration_profile_id: ConvertToObjectId(registrationProfile._id),
+    });
+
+    return billingExist > 0;
+  } catch (error) {
+    throw new Error(`CheckIfTerminationOfPaymentUsedByBilling error: ${error.message}`);
   }
-
-  const billingExist = await Billing.countDocuments({
-    registration_profile_id: ConvertToObjectId(registrationProfile._id),
-  });
-
-  return billingExist > 0;
 };
 
 module.exports = {
