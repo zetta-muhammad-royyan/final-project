@@ -11,7 +11,7 @@ const {
 // *************** IMPORT UTILITIES ***************
 const { CheckObjectId } = require('../../utils/mongoose.utils');
 const { TrimString } = require('../../utils/string.utils');
-const { IsNull, IsEmptyString } = require('../../utils/sanity.utils');
+const { IsUndefinedOrNull, IsEmptyString } = require('../../utils/sanity.utils');
 
 // *************** IMPORT VALIDATOR ***************
 const { ValidatePagination, ValidateStudentInput } = require('./student.validator');
@@ -244,9 +244,9 @@ const UpdateStudent = async (_parent, args, { models }) => {
     if (usedByBilling) {
       //*************** throw error if user want to edit financial support or regisration profile
       if (
-        !IsNull(args.financial_support) ||
+        !IsUndefinedOrNull(args.financial_support) ||
         (Array.isArray(args.financial_support) && args.financial_support.length > 0) ||
-        !IsNull(args.registration_profile_id)
+        !IsUndefinedOrNull(args.registration_profile_id)
       ) {
         throw new Error('cannot update financial support or registration profile if billing already generated for this student');
       }

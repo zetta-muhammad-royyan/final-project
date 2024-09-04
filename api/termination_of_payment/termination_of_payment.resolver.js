@@ -5,7 +5,7 @@ const TerminationOfPayment = require('./termination_of_payment.model');
 const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { AmountCannotBeMinus, AmountMustHaveMaxTwoDecimal } = require('../../utils/monetary.utils');
 const { TrimString } = require('../../utils/string.utils');
-const { IsEmptyString, IsNull } = require('../../utils/sanity.utils');
+const { IsEmptyString, IsUndefinedOrNull } = require('../../utils/sanity.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const {
@@ -147,7 +147,7 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
     }
 
     //*************** validate additional cost if exists
-    if (args.additional_cost) {
+    if (!IsUndefinedOrNull(args.additional_cost)) {
       //*************** only two decimal allowed
       AmountMustHaveMaxTwoDecimal(args.additional_cost);
 
@@ -169,8 +169,8 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
     const usedByBilling = await CheckIfTerminationOfPaymentUsedByBilling(args._id);
     if (usedByBilling) {
       if (
-        !IsNull(args.additional_cost) ||
-        !IsNull(args.term_payments) ||
+        !IsUndefinedOrNull(args.additional_cost) ||
+        !IsUndefinedOrNull(args.term_payments) ||
         (Array.isArray(args.term_payments) && args.term_payments.length > 0)
       ) {
         throw new Error('cannot update additional cost or term payments if billing already generated using this termination of payment');
