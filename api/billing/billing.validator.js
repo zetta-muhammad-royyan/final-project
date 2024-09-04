@@ -44,55 +44,58 @@ const ValidatePayer = async (payer, paymentType, student) => {
     let payerIncludeFinancialSupport = false;
     let costCoverage = 0;
 
+    //*************** validate that payer IDs are unique
     ValidatePayerIdMustBeUnique(payer);
 
+    //*************** extract all payer IDs to minimize database lookups
+    const payerIds = payer.map((p) => p.payer_id);
+
+    //*************** batch query to find all matching FinancialSupports and Students
+    const financialSupports = await FinancialSupport.find({ _id: { $in: payerIds } }).lean();
+    const students = await Student.find({ _id: { $in: payerIds } }).lean();
+
     for (let i = 0; i < payer.length; i++) {
-      //*************** payer must be a financial support for the student or the student it self
-      if (!student.financial_support_ids.includes(payer[i].payer_id) && student._id != payer[i].payer_id) {
-        throw new Error('payer must be a financial support that belong to student or the student it self');
+      const { payer_id, cost_coverage } = payer[i];
+
+      //*************** validate that the payer belongs to the student or the student it self
+      if (!student.financial_support_ids.includes(payer_id) && student._id.toString() !== payer_id) {
+        console.log(typeof student._id, typeof payer_id);
+        throw new Error('payer must be a financial support that belong to student or the student itself');
       }
 
-      // *************** check if payer is FinancialSupport
-      const payerIsFinancialSupport = await FinancialSupport.findOne({ _id: payer[i].payer_id });
-      if (payerIsFinancialSupport) {
+      //*************** check if payer is FinancialSupport
+      const isFinancialSupport = financialSupports.find((fs) => fs._id.toString() === payer_id);
+      if (isFinancialSupport) {
         payerIncludeFinancialSupport = true;
-        costCoverage += payer[i].cost_coverage;
-        validatedPayer.push({
-          ...payer[i],
-          type: 'FinancialSupport',
-        });
-
+        costCoverage += cost_coverage;
+        validatedPayer.push({ ...payer[i], type: 'FinancialSupport' });
         continue;
       }
 
-      // *************** check if payer is student
-      const payerIsStudent = await Student.findOne({ _id: payer[i].payer_id });
-      if (payerIsStudent) {
+      //*************** check if payer is the Student
+      const isStudent = students.find((s) => s._id.toString() === payer_id);
+      if (isStudent) {
         payerIncludeStudent = true;
-        costCoverage += payer[i].cost_coverage;
-        validatedPayer.push({
-          ...payer[i],
-          type: 'Student',
-        });
-
+        costCoverage += cost_coverage;
+        validatedPayer.push({ ...payer[i], type: 'Student' });
         continue;
       }
 
       throw new Error('payer_id is not one of FinancialSupport or a Student');
     }
 
-    //*************** other student cannot be payer
-    if (validatedPayer.filter((payer) => payer.type === 'Student').length > 1) {
-      throw new Error('other student cannot be payer');
+    //*************** ensure only one student can be the payer
+    if (validatedPayer.filter((p) => p.type === 'Student').length > 1) {
+      throw new Error('other students cannot be payers');
     }
 
-    //*************** check if payer only a student and only one payer
-    const isPayerOnlyStudent = validatedPayer.every((payer) => payer.type === 'Student') && validatedPayer.length === 1;
+    //*************** check if payer is only the student and there is only one payer
+    const isPayerOnlyStudent = validatedPayer.every((p) => p.type === 'Student') && validatedPayer.length === 1;
 
-    // *************** check payment type if accordance with the payer
+    //*************** validate if the payment type matches the payer configuration
     ValidatePaymentType(paymentType, payerIncludeStudent, payerIncludeFinancialSupport, isPayerOnlyStudent);
 
-    // *************** summed cost coverage must be 100
+    //*************** validate that the total cost coverage is exactly 100%
     if (costCoverage !== 100) {
       throw new Error('summed cost coverage must be 100');
     }
