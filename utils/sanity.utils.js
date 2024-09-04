@@ -25,6 +25,23 @@ const IsEmptyString = (input) => {
 };
 
 /**
+ * Check if given input is undefined or not
+ * @param {undefined} input
+ * @returns {boolean}
+ */
+const IsUndefined = (input) => {
+  return input === undefined;
+};
+
+/**
+ * Check if given input is undefined or null
+ * @param {undefined|null} input
+ */
+const IsUndefinedOrNull = (input) => {
+  return IsUndefined(input) || IsNull(input);
+};
+
+/**
  * Check if the given input is a sorting input which is 1 or -1
  * @param {number} input
  * @returns {boolean}
@@ -38,4 +55,6 @@ module.exports = {
   IsNull,
   IsEmptyString,
   IsSortingInput,
+  IsUndefined,
+  IsUndefinedOrNull,
 };

@@ -5,7 +5,7 @@ const RegistrationProfile = require('./registration_profile.model');
 const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { AmountMustHaveMaxTwoDecimal, AmountCannotBeMinus } = require('../../utils/monetary.utils');
 const { TrimString } = require('../../utils/string.utils');
-const { IsEmptyString } = require('../../utils/sanity.utils');
+const { IsEmptyString, IsUndefinedOrNull } = require('../../utils/sanity.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const {
@@ -152,43 +152,76 @@ const CreateRegistrationProfile = async (_parent, args) => {
  */
 const UpdateRegistrationProfile = async (_parent, args) => {
   try {
+    CheckObjectId(args._id);
+
     if (IsEmptyString(args.registration_profile_name)) {
       throw new Error('registration profile name cannot be empty string');
     }
 
-    CheckObjectId(args._id);
-
-    //*************** only two decimal allowed
-    AmountMustHaveMaxTwoDecimal(args.scholarship_fee);
-    AmountMustHaveMaxTwoDecimal(args.deposit);
-    AmountMustHaveMaxTwoDecimal(args.registration_fee);
-
-    //*************** amount cannot be minus
-    AmountCannotBeMinus(args.scholarship_fee);
-    AmountCannotBeMinus(args.deposit);
-    AmountCannotBeMinus(args.registration_fee);
-
-    //*************** cannot update registration profile if already used by billing
-    const usedByBilling = await CheckIfRegistrationProfileUsedByBilling(args._id);
-    if (usedByBilling) {
-      throw new Error('cannot update registration profile because already used by billing');
+    //*************** validate registration fee if exists
+    if (!IsUndefinedOrNull(args.registration_fee)) {
+      AmountMustHaveMaxTwoDecimal(args.registration_fee);
+      AmountCannotBeMinus(args.registration_fee);
     }
 
-    const updatedRegistrationProfiles = await RegistrationProfile.findByIdAndUpdate(
-      args._id,
-      {
-        $set: {
-          registration_profile_name: TrimString(args.registration_profile_name),
-          scholarship_fee: args.scholarship_fee,
-          deposit: args.deposit,
-          registration_fee: args.registration_fee,
-          termination_of_payment_id: args.termination_of_payment_id,
-        },
-      },
-      { new: true }
-    );
+    //*************** validate scholarship fee if exists
+    if (!IsUndefinedOrNull(args.scholarship_fee)) {
+      AmountMustHaveMaxTwoDecimal(args.scholarship_fee);
+      AmountCannotBeMinus(args.scholarship_fee);
+    }
 
-    return updatedRegistrationProfiles;
+    //*************** validate deposit if exists
+    if (!IsUndefinedOrNull(args.deposit)) {
+      AmountMustHaveMaxTwoDecimal(args.deposit);
+      AmountCannotBeMinus(args.deposit);
+    }
+
+    //*************** validate termination of payment id if exists
+    if (args.termination_of_payment_id) {
+      CheckObjectId(args.termination_of_payment_id);
+    }
+
+    const registrationProfile = await RegistrationProfile.findById(args._id);
+    if (!registrationProfile) {
+      throw new Error('Registration Profile not found');
+    }
+
+    //*************** can only update registration profile name if billing already generated
+    const usedByBilling = await CheckIfRegistrationProfileUsedByBilling(args._id);
+    if (usedByBilling) {
+      console.log(args.deposit);
+      if (
+        !IsUndefinedOrNull(args.deposit) ||
+        !IsUndefinedOrNull(args.registration_fee) ||
+        !IsUndefinedOrNull(args.scholarship_fee) ||
+        !IsUndefinedOrNull(args.termination_of_payment_id)
+      ) {
+        throw new Error(
+          'cannot update deposit, registration_fee, scholarship fee or termination of payment id if billing already created using this registration profile'
+        );
+      }
+
+      registrationProfile.registration_profile_name = args.registration_profile_name
+        ? TrimString(args.registration_profile_name)
+        : registrationProfile.registration_profile_name;
+      const updatedRegistrationProfile = await registrationProfile.save();
+
+      return updatedRegistrationProfile;
+    }
+
+    //*************** update registration profile with new data
+    registrationProfile.registration_profile_name = args.registration_profile_name
+      ? TrimString(args.registration_profile_name)
+      : registrationProfile.registration_profile_name;
+    registrationProfile.scholarship_fee = args.scholarship_fee ? args.scholarship_fee : registrationProfile.scholarship_fee;
+    registrationProfile.deposit = args.deposit ? args.deposit : registrationProfile.deposit;
+    registrationProfile.registration_fee = args.registration_fee ? args.registration_fee : registrationProfile.registration_fee;
+    registrationProfile.termination_of_payment_id = args.termination_of_payment_id
+      ? args.termination_of_payment_id
+      : registrationProfile.termination_of_payment_id;
+
+    const updatedRegistrationProfile = await registrationProfile.save();
+    return updatedRegistrationProfile;
   } catch (error) {
     throw new Error(`Failed to update RegistrationProfiles: ${error.message}`);
   }
