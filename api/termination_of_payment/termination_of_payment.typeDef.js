@@ -53,9 +53,9 @@ const terminationOfpayment = gql`
     CreateTerminationOfPayment(description: String!, term_payments: [TermPaymentInput!]!, additional_cost: Float!): TerminationOfPayment!
     UpdateTerminationOfPayment(
       _id: ID!
-      description: String!
-      term_payments: [TermPaymentInput!]!
-      additional_cost: Float!
+      description: String
+      term_payments: [TermPaymentInput]
+      additional_cost: Float
     ): TerminationOfPayment!
     DeleteTerminationOfPayment(_id: ID!): String
   }

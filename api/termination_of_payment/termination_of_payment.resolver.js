@@ -5,6 +5,7 @@ const TerminationOfPayment = require('./termination_of_payment.model');
 const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { AmountCannotBeMinus, AmountMustHaveMaxTwoDecimal } = require('../../utils/monetary.utils');
 const { TrimString } = require('../../utils/string.utils');
+const { IsEmptyString, IsNull } = require('../../utils/sanity.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const {
@@ -15,7 +16,7 @@ const {
 } = require('./termination_of_payment.helper');
 
 // *************** IMPORT VALIDATOR ***************
-const { ValidateTerminationOfPaymentInput, ValidatePagination } = require('./termination_of_payment.validator');
+const { ValidateTerminationOfPaymentInput, ValidatePagination, ValidateTermPayment } = require('./termination_of_payment.validator');
 
 // *************** QUERY ***************
 
@@ -139,37 +140,52 @@ const CreateTerminationOfPayment = async (_parent, args) => {
  */
 const UpdateTerminationOfPayment = async (_parent, args) => {
   try {
-    ValidateTerminationOfPaymentInput(args);
     CheckObjectId(args._id);
 
-    //*************** only two decimal allowed
-    AmountMustHaveMaxTwoDecimal(args.additional_cost);
+    if (IsEmptyString(args.description)) {
+      throw new Error('description cannot be empty string');
+    }
 
-    //*************** amount cannot be minus
-    AmountCannotBeMinus(args.additional_cost);
+    //*************** validate additional cost if exists
+    if (args.additional_cost) {
+      //*************** only two decimal allowed
+      AmountMustHaveMaxTwoDecimal(args.additional_cost);
+
+      //*************** amount cannot be minus
+      AmountCannotBeMinus(args.additional_cost);
+    }
+
+    //*************** validate term payments if exists
+    if (args.term_payments || (Array.isArray(args.term_payments) && args.term_payments.length > 0)) {
+      ValidateTermPayment(args.term_payments);
+    }
+
+    const termination = await TerminationOfPayment.findById(args._id);
+    if (!termination) {
+      throw new Error('TerminationOfPayment not found');
+    }
 
     //*************** cannot update terminnation of payment because generated billing use this termination of payment
     const usedByBilling = await CheckIfTerminationOfPaymentUsedByBilling(args._id);
     if (usedByBilling) {
-      throw new Error('cannot update termination of payment because already used by billing');
+      if (
+        !IsNull(args.additional_cost) ||
+        !IsNull(args.term_payments) ||
+        (Array.isArray(args.term_payments) && args.term_payments.length > 0)
+      ) {
+        throw new Error('cannot update additional cost or term payments if billing already generated using this termination of payment');
+      }
+
+      termination.description = args.description ? TrimString(args.description) : termination.description;
+      const updatedTerminationOfPayment = await termination.save();
+      return updatedTerminationOfPayment;
     }
 
-    const updatedTerminationOfPayment = await TerminationOfPayment.findByIdAndUpdate(
-      args._id,
-      {
-        $set: {
-          description: TrimString(args.description),
-          termination: args.term_payments.length,
-          term_payments: args.term_payments,
-          additional_cost: args.additional_cost,
-        },
-      },
-      { new: true }
-    );
-
-    if (!updatedTerminationOfPayment) {
-      throw new Error('TerminationOfPayments not found');
-    }
+    termination.description = args.description ? TrimString(args.description) : termination.description;
+    termination.termination = args.term_payments ? args.term_payments.length : termination.termination;
+    termination.term_payments = args.term_payments ? args.term_payments : termination.term_payments;
+    termination.additional_cost = args.additional_cost ? args.additional_cost : termination.additional_cost;
+    const updatedTerminationOfPayment = await termination.save();
 
     return updatedTerminationOfPayment;
   } catch (error) {
