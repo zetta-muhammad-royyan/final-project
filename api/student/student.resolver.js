@@ -1,4 +1,8 @@
+// *************** IMPORT MODULE ***************
 const FinancialSupport = require('../financial_support/financial_support.model');
+const Student = require('../student/student.model');
+const financialSupportLoader = require('../financial_support/financial_support.loader');
+const registrationProfileLoader = require('../registration_profile/registration_profile.loader');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const { PrepareFinancialSupportData } = require('../financial_support/financial_support.helper');
@@ -39,7 +43,7 @@ const { ValidatePagination, ValidateStudentInput } = require('./student.validato
  * @param {Object} context.models
  * @returns {Promise<Object>}
  */
-const GetAllStudents = async (_parent, { filter, sort, pagination }, { models }) => {
+const GetAllStudents = async (_parent, { filter, sort, pagination }) => {
   try {
     const { page = 1, limit = 10 } = pagination;
     ValidatePagination(page, limit);
@@ -131,7 +135,7 @@ const GetAllStudents = async (_parent, { filter, sort, pagination }, { models })
       },
     });
 
-    const students = await models.student.aggregate(pipeline);
+    const students = await Student.aggregate(pipeline);
     return students;
   } catch (error) {
     throw new Error(`Failed to fetch all Student: ${error.message}`);
@@ -146,11 +150,11 @@ const GetAllStudents = async (_parent, { filter, sort, pagination }, { models })
  * @param {Object} context
  * @param {Object} context.models
  */
-const GetOneStudent = async (_parent, args, { models }) => {
+const GetOneStudent = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
 
-    const student = await models.student.findById(args._id);
+    const student = await Student.findById(args._id);
     if (!student) {
       throw new Error('Student not found');
     }
@@ -238,7 +242,7 @@ const CreateStudent = async (_parent, args, { models }) => {
  * @param {Object} context.models
  * @returns {Promise<Object>}
  */
-const UpdateStudent = async (_parent, args, { models }) => {
+const UpdateStudent = async (_parent, args) => {
   try {
     if (IsEmptyString(args.first_name)) {
       throw new Error('student first name cannot be empty string');
@@ -251,7 +255,7 @@ const UpdateStudent = async (_parent, args, { models }) => {
     CheckObjectId(args._id);
 
     //*************** fetch student
-    const student = await models.student.findById(args._id);
+    const student = await Student.findById(args._id);
     if (!student) {
       throw new Error('Student not found');
     }
@@ -314,7 +318,7 @@ const UpdateStudent = async (_parent, args, { models }) => {
  * @param {Object} contex.models
  * @returns {Promise<String>}
  */
-const DeleteStudent = async (_parent, args, { models }) => {
+const DeleteStudent = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
 
@@ -324,14 +328,14 @@ const DeleteStudent = async (_parent, args, { models }) => {
       throw new Error('cannot delete student because already used by billing');
     }
 
-    const deletedStudent = await models.student.findByIdAndDelete(args._id, { financial_support_ids: 1 });
+    const deletedStudent = await Student.findByIdAndDelete(args._id, { financial_support_ids: 1 });
     if (!deletedStudent) {
       throw new Error('Student not found');
     }
 
     // *************** Delete student financial supports if any
     if (deletedStudent.financial_support_ids.length > 0) {
-      await models.financialSupport.deleteMany({ _id: { $in: deletedStudent.financial_support_ids } });
+      await FinancialSupport.deleteMany({ _id: { $in: deletedStudent.financial_support_ids } });
     }
 
     return 'Student deleted successfully';
@@ -351,8 +355,8 @@ const DeleteStudent = async (_parent, args, { models }) => {
  * @param {Object} context.loaders - The loaders object containing DataLoader instances.
  * @returns {Promise<Array<Object>>} A promise that resolves to an array of financial support details loaded by DataLoader.
  */
-const GetFinancialSupports = (parent, _args, { loaders }) => {
-  return loaders.financialSupportLoader.loadMany(parent.financial_support_ids);
+const GetFinancialSupports = (parent, _args) => {
+  return financialSupportLoader.loadMany(parent.financial_support_ids);
 };
 
 /**
@@ -364,8 +368,8 @@ const GetFinancialSupports = (parent, _args, { loaders }) => {
  * @param {Object} context.loaders - The loaders object containing DataLoader instances.
  * @returns {Promise<Object>} A promise that resolves to the registration profile details loaded by DataLoader.
  */
-const GetRegistrationProfile = (parent, _args, { loaders }) => {
-  return loaders.registrationProfileLoader.load(parent.registration_profile_id);
+const GetRegistrationProfile = (parent, _args) => {
+  return registrationProfileLoader.load(parent.registration_profile_id);
 };
 
 const studentResolver = {

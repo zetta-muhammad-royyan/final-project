@@ -2,6 +2,14 @@
 const Billing = require('./billing.model');
 const Term = require('../term/term.model');
 const Deposit = require('../deposit/deposit.model');
+const Student = require('../student/student.model');
+const RegistrationProfile = require('../registration_profile/registration_profile.model');
+const TerminationOfPayment = require('../termination_of_payment/termination_of_payment.model');
+const studentLoader = require('../student/student.loader');
+const registrationProfileLoader = require('../registration_profile/registration_profile.loader');
+const termLoader = require('../term/term.loader');
+const depositLoader = require('../deposit/deposit.loader');
+const financialSupportLoader = require('../financial_support/financial_support.loader');
 
 // *************** IMPORT UTILITIES ***************
 const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
@@ -41,11 +49,9 @@ const { ValidatePayer, ValidatePagination } = require('./billing.validator');
  * @param {Object} args.pagination
  * @param {Int} args.pagination.page
  * @param {Int} args.pagination.limit
- * @param {Object} context
- * @param {Object} context.models
  * @returns {Promise<Object>}
  */
-const GetAllBillings = async (_parent, { filter, sort, pagination }, { models }) => {
+const GetAllBillings = async (_parent, { filter, sort, pagination }) => {
   try {
     const { page = 1, limit = 10 } = pagination;
     ValidatePagination(page, limit);
@@ -145,7 +151,7 @@ const GetAllBillings = async (_parent, { filter, sort, pagination }, { models })
     pipeline.push({ $skip: (page - 1) * limit });
     pipeline.push({ $limit: limit });
 
-    const billings = await models.billing.aggregate(pipeline);
+    const billings = await Billing.aggregate(pipeline);
     return billings;
   } catch (error) {
     throw new Error(`Failed to fetch all billings: ${error.message}`);
@@ -160,11 +166,11 @@ const GetAllBillings = async (_parent, { filter, sort, pagination }, { models })
  * @param {Object} context
  * @param {Object} context.models
  */
-const GetOneBilling = async (_parent, args, { models }) => {
+const GetOneBilling = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
 
-    const billing = await models.billing.findById(args._id);
+    const billing = Billing.findById(args._id);
     if (!billing) {
       throw new Error('Billing not found');
     }
@@ -190,7 +196,7 @@ const GetOneBilling = async (_parent, args, { models }) => {
  * @param {Object} context.models
  * @returns {Promise<Array<Object>>}
  */
-const GenerateBilling = async (_parent, args, { models }) => {
+const GenerateBilling = async (_parent, args) => {
   // *************** Student who has billing cannot generate billing again
   await CheckIfStudentHasBillingOrNot(args.student_id);
 
@@ -198,17 +204,17 @@ const GenerateBilling = async (_parent, args, { models }) => {
   CheckObjectId(args.student_id);
 
   // *************** Fetch required data
-  const student = await models.student.findOne({ _id: args.student_id });
+  const student = await Student.findOne({ _id: args.student_id });
   if (!student) {
     throw new Error('Student not found');
   }
 
-  const registrationProfile = await models.registrationProfile.findOne({ _id: student.registration_profile_id });
+  const registrationProfile = await RegistrationProfile.findOne({ _id: student.registration_profile_id });
   if (!registrationProfile) {
     throw new Error('Registration Profile not found');
   }
 
-  const terminationOfPayment = await models.terminationOfPayment.findOne({ _id: registrationProfile.termination_of_payment_id });
+  const terminationOfPayment = await TerminationOfPayment.findOne({ _id: registrationProfile.termination_of_payment_id });
   if (!terminationOfPayment) {
     throw new Error('Termination of Payment not found');
   }
@@ -335,7 +341,7 @@ const GenerateBilling = async (_parent, args, { models }) => {
  * @param {Object} context
  * @param {Object} context.models
  */
-const AddPayment = async (_parent, args, { models }) => {
+const AddPayment = async (_parent, args) => {
   try {
     CheckObjectId(args.billing_id);
 
@@ -431,7 +437,7 @@ const AddPayment = async (_parent, args, { models }) => {
         ? Math.abs(parseFloat(args.amount) - parseFloat(billing.remaining_due)).toFixed(2)
         : parseFloat(0).toFixed(2);
 
-    const updatedBilling = await models.billing.findByIdAndUpdate(
+    const updatedBilling = await Billing.findByIdAndUpdate(
       billing._id,
       {
         paid_amount: paidAmount,
@@ -454,7 +460,7 @@ const AddPayment = async (_parent, args, { models }) => {
  * @param {Object} context
  * @param {Object} context.models
  */
-const RemovePayment = async (_parent, args, { models }) => {
+const RemovePayment = async (_parent, args) => {
   try {
     CheckObjectId(args.billing_id);
 
@@ -504,7 +510,7 @@ const RemovePayment = async (_parent, args, { models }) => {
         ? parseFloat(billing.total_amount).toFixed(2)
         : (parseFloat(billing.remaining_due) + parseFloat(args.amount)).toFixed(2);
 
-    const updatedBilling = await models.billing.findByIdAndUpdate(
+    const updatedBilling = await Billing.findByIdAndUpdate(
       billing._id,
       {
         paid_amount: paidAmount,
@@ -529,8 +535,8 @@ const RemovePayment = async (_parent, args, { models }) => {
  * @param {Object} context.loaders
  * @returns {Promise<Object>}
  */
-const GetStudent = async (parent, _args, { loaders }) => {
-  return loaders.studentLoader.load(parent.student_id);
+const GetStudent = async (parent, _args) => {
+  return studentLoader.load(parent.student_id);
 };
 
 /**.
@@ -541,8 +547,8 @@ const GetStudent = async (parent, _args, { loaders }) => {
  * @param {Object} context.loaders
  * @returns {Promise<Object>}
  */
-const GetRegistrationProfile = async (parent, _args, { loaders }) => {
-  return loaders.registrationProfileLoader.load(parent.registration_profile_id);
+const GetRegistrationProfile = async (parent, _args) => {
+  return registrationProfileLoader.load(parent.registration_profile_id);
 };
 
 /**.
@@ -553,12 +559,12 @@ const GetRegistrationProfile = async (parent, _args, { loaders }) => {
  * @param {Object} context.loaders
  * @returns {Promise<Object>}
  */
-const GetTerms = async (parent, _args, { loaders }) => {
+const GetTerms = async (parent, _args) => {
   if (!parent.term_ids || parent.term_ids.length < 1) {
     return [];
   }
 
-  return loaders.termLoader.loadMany(parent.term_ids);
+  return termLoader.loadMany(parent.term_ids);
 };
 
 /**.
@@ -569,12 +575,12 @@ const GetTerms = async (parent, _args, { loaders }) => {
  * @param {Object} context.loaders
  * @returns {Promise<Object>}
  */
-const GetDeposit = async (parent, _args, { loaders }) => {
+const GetDeposit = async (parent, _args) => {
   if (!parent.deposit_id) {
     return null;
   }
 
-  return loaders.depositLoader.load(parent.deposit_id);
+  return depositLoader.load(parent.deposit_id);
 };
 
 /**.
@@ -585,15 +591,12 @@ const GetDeposit = async (parent, _args, { loaders }) => {
  * @param {Object} context.loaders
  * @returns {Promise<Object>}
  */
-const GetPayer = async (parent, _args, { loaders }) => {
+const GetPayer = async (parent, _args) => {
   if (!parent.payer) {
     return null;
   }
 
-  const [student, financialSupport] = await Promise.all([
-    loaders.studentLoader.load(parent.payer),
-    loaders.financialSupportLoader.load(parent.payer),
-  ]);
+  const [student, financialSupport] = await Promise.all([studentLoader.load(parent.payer), financialSupportLoader.load(parent.payer)]);
 
   if (student) {
     return student;

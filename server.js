@@ -29,7 +29,6 @@ const schema = makeExecutableSchema({
 
 const server = new ApolloServer({
   schema,
-  context: graphqlConfig.context,
 });
 
 server.applyMiddleware({ app });

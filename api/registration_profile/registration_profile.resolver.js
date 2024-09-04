@@ -1,5 +1,6 @@
 // *************** IMPORT MODULE ***************
 const RegistrationProfile = require('./registration_profile.model');
+const terminationOfPaymentLoader = require('../termination_of_payment/termination_of_payment.loader');
 
 // *************** IMPORT UTILITIES ***************
 const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
@@ -76,11 +77,11 @@ const GetAllRegistrationProfiles = async (_parent, { filter, sort, pagination })
  * @param {import('./registration_profile.model').default} context.models.registrationProfile
  * @returns {Promise<Object>}
  */
-const GetOneRegistrationProfile = async (_parent, args, { models }) => {
+const GetOneRegistrationProfile = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
 
-    const registrationProfile = await models.registrationProfile.findById(args._id);
+    const registrationProfile = await RegistrationProfile.findById(args._id);
     if (!registrationProfile) {
       throw new Error('RegistrationProfile not found');
     }
@@ -272,8 +273,8 @@ const DeleteRegistrationProfile = async (_parent, args) => {
  * @param {Object} context.loaders - The loaders object containing DataLoader instances.
  * @returns {Promise<Object>} A promise that resolves to the termination of payment details loaded by DataLoader.
  */
-const GetTerminationOfPayment = (parent, _args, { loaders }) => {
-  return loaders.terminationOfPaymentLoader.load(parent.termination_of_payment_id);
+const GetTerminationOfPayment = (parent, _args) => {
+  return terminationOfPaymentLoader.load(parent.termination_of_payment_id);
 };
 
 const registrationProfileResolver = {

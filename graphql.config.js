@@ -22,24 +22,4 @@ module.exports = {
     deposit.typeDef,
     financialSupport.typeDef,
   ]),
-  context: {
-    models: {
-      terminationOfPayment: terminationOfPayment.model,
-      registrationProfile: registrationProfile.model,
-      financialSupport: financialSupport.model,
-      student: student.model,
-      billing: billing.model,
-      term: term.model,
-      deposit: deposit.model,
-    },
-    loaders: {
-      terminationOfPaymentLoader: terminationOfPayment.loader,
-      registrationProfileLoader: registrationProfile.loader,
-      financialSupportLoader: financialSupport.loader,
-      billingLoader: billing.loader,
-      depositLoader: deposit.loader,
-      termLoader: term.loader,
-      studentLoader: student.loader,
-    },
-  },
 };
