@@ -2,7 +2,10 @@
 const Billing = require('./billing.model');
 const Term = require('../term/term.model');
 const Deposit = require('../deposit/deposit.model');
+
+// *************** IMPORT UTILITIES ***************
 const { ConvertToObjectId } = require('../../utils/mongoose.utils');
+const { IsSortingInput } = require('../../utils/sanity.utils');
 
 /**
  * Check if user already has billing or not
@@ -467,14 +470,26 @@ const CreateSortPipelineStage = (sort) => {
   const sortStage = {};
   if (sort) {
     if (sort.student_full_name) {
+      if (!IsSortingInput(sort.student_full_name)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.student_full_name = sort.student_full_name;
     }
 
     if (sort.payer_full_name) {
+      if (!IsSortingInput(sort.payer_full_name)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.payer_full_name = sort.payer_full_name;
     }
 
     if (sort.termination) {
+      if (!IsSortingInput(sort.termination)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage['termination_of_payment.termination'] = sort.termination;
     }
   }

@@ -3,6 +3,7 @@ const Billing = require('../billing/billing.model');
 
 // *************** IMPORT UTILITIES ***************
 const { ConvertToObjectId } = require('../../utils/mongoose.utils');
+const { IsSortingInput } = require('../../utils/sanity.utils');
 
 /**
  * Create $lookup and $unwind stages for MongoDB aggregation pipeline.
@@ -55,14 +56,26 @@ const CreateSortPipelineStage = (sort) => {
   const sortStage = {};
   if (sort) {
     if (sort.registration_profile_name) {
+      if (!IsSortingInput(sort.registration_profile_name)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage['registration_profile.name'] = sort.registration_profile_name;
     }
 
     if (sort.registration_profile_id) {
+      if (!IsSortingInput(sort.registration_profile_id)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.registration_profile_id = sort.registration_profile_id;
     }
 
     if (sort.financial_support_full_name) {
+      if (!IsSortingInput(sort.financial_support_full_name)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.financial_support_full_name = sort.financial_support_full_name;
     }
   }

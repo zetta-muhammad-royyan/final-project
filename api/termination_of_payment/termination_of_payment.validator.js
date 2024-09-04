@@ -2,7 +2,7 @@
 const moment = require('moment');
 
 // *************** IMPORT UTILITIES ***************
-const { IsNumber, IsString } = require('../../utils/primitiveTypes.utils');
+const { IsNull, IsEmptyString } = require('../../utils/sanity.utils');
 
 /**
  * @param {Object} input
@@ -13,13 +13,9 @@ const { IsNumber, IsString } = require('../../utils/primitiveTypes.utils');
  * @param {Float} input.additional_cost - Any additional fees applied.
  */
 const ValidateTerminationOfPaymentInput = (input) => {
-  const { description, term_payments, additional_cost } = input;
-  if (!IsString(description)) {
-    throw new Error('description must be a string');
-  }
-
-  if (!IsNumber(additional_cost)) {
-    throw new Error('additional_cost must be a number');
+  const { description, term_payments } = input;
+  if (IsNull(description) || IsEmptyString(description)) {
+    throw new Error('description cannot be empty string or null');
   }
 
   ValidateTermPayment(term_payments);
@@ -35,7 +31,6 @@ const ValidateTermPayment = (term_payments) => {
     throw new Error('term_payments cannot be empty');
   }
 
-  // TODO: handle when only one item in term_Payments
   for (let i = 0; i < term_payments.length; i++) {
     const currentDate = moment(term_payments[i].payment_date, 'DD-MM-YYYY', true);
     if (i !== 0) {
@@ -51,8 +46,9 @@ const ValidateTermPayment = (term_payments) => {
       throw new Error('payment_date cannot be converted to date');
     }
 
-    if (!IsNumber(term_payments[i].percentage)) {
-      throw new Error('percentage must be a number');
+    //*************** percentage must be greater than 0
+    if (term_payments[i].percentage <= 0) {
+      throw new Error('term payment percentage must be greater than zero');
     }
   }
 

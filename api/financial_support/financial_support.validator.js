@@ -1,5 +1,5 @@
 // *************** IMPORT UTILITIES ***************
-const { IsString } = require('../../utils/primitiveTypes.utils');
+const { IsEmptyString } = require('../../utils/sanity.utils');
 
 /**
  *
@@ -8,8 +8,16 @@ const { IsString } = require('../../utils/primitiveTypes.utils');
  * @param {string} lastName
  */
 const ValidateFinancialSupportInput = (civility, firstName, lastName) => {
-  if (!IsString(civility) || !IsString(firstName) || !IsString(lastName)) {
-    throw new Error('arguments not met the requirements');
+  if (IsEmptyString(civility)) {
+    throw new Error('civility cannot be empty string');
+  }
+
+  if (IsEmptyString(firstName)) {
+    throw new Error('civility cannot be empty string');
+  }
+
+  if (IsEmptyString(lastName)) {
+    throw new Error('civility cannot be empty string');
   }
 
   ValidateCivility(civility);

@@ -4,6 +4,7 @@ const Billing = require('../billing/billing.model');
 
 // *************** IMPORT UTILITIES ***************
 const { ConvertToObjectId } = require('../../utils/mongoose.utils');
+const { IsSortingInput } = require('../../utils/sanity.utils');
 
 /**
  * @param {Object} filter
@@ -17,7 +18,8 @@ const CreatePipelineMatchStage = (filter) => {
     if (filter.description) {
       matchStage.description = { $regex: filter.description, $options: 'i' };
     }
-    if (filter.termination !== undefined) {
+
+    if (filter.termination) {
       matchStage.termination = filter.termination;
     }
   }
@@ -34,10 +36,18 @@ const CreatePipelineMatchStage = (filter) => {
 const CreateSortPipeline = (sort) => {
   const sortStage = {};
   if (sort) {
-    if (sort.description !== undefined) {
+    if (sort.description) {
+      if (!IsSortingInput(sort.description)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.description = sort.description;
     }
-    if (sort.termination !== undefined) {
+    if (sort.termination) {
+      if (!IsSortingInput(sort.termination)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.termination = sort.termination;
     }
   }

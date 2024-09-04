@@ -1,5 +1,5 @@
 // *************** IMPORT UTILITIES ***************
-const { IsString } = require('../../utils/primitiveTypes.utils');
+const { IsEmptyString } = require('../../utils/sanity.utils');
 
 /**
  * Validate Pagination
@@ -19,8 +19,16 @@ const ValidatePagination = (page, limit) => {
  * @param {string} lastName
  */
 const ValidateStudentInput = (civility, firstName, lastName) => {
-  if (!IsString(civility) || !IsString(firstName) || !IsString(lastName)) {
-    throw new Error('arguments not met the requirements');
+  if (IsEmptyString(civility)) {
+    throw new Error('civility cannot be empty string');
+  }
+
+  if (IsEmptyString(firstName)) {
+    throw new Error('civility cannot be empty string');
+  }
+
+  if (IsEmptyString(lastName)) {
+    throw new Error('civility cannot be empty string');
   }
 
   ValidateCivility(civility);

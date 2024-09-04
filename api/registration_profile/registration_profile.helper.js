@@ -4,6 +4,7 @@ const Student = require('../student/student.model');
 
 // *************** IMPORT UTILITIES ***************
 const { ConvertToObjectId } = require('../../utils/mongoose.utils');
+const { IsSortingInput } = require('../../utils/sanity.utils');
 
 /**
  * @param {Object} filter
@@ -14,10 +15,11 @@ const { ConvertToObjectId } = require('../../utils/mongoose.utils');
 const CreatePipelineMatchStage = (filter) => {
   const matchStage = {};
   if (filter) {
-    if (filter.registration_profile_name !== undefined) {
+    if (filter.registration_profile_name) {
       matchStage.registration_profile_name = { $regex: filter.registration_profile_name, $options: 'i' };
     }
-    if (filter.termination_of_payment_id !== undefined) {
+
+    if (filter.termination_of_payment_id) {
       matchStage.termination_of_payment_id = ConvertToObjectId(filter.termination_of_payment_id);
     }
   }
@@ -33,10 +35,19 @@ const CreatePipelineMatchStage = (filter) => {
 const CreatePipelineSortStage = (sort) => {
   const sortStage = {};
   if (sort) {
-    if (sort.registration_profile_name !== undefined) {
+    if (sort.registration_profile_name) {
+      if (!IsSortingInput(sort.registration_profile_name)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.registration_profile_name = sort.registration_profile_name;
     }
-    if (sort.termination_of_payment_id !== undefined) {
+
+    if (sort.termination_of_payment_id) {
+      if (!IsSortingInput(sort.termination_of_payment_id)) {
+        throw new Error('the sorting input must be 1 for ascending or -1 for descending');
+      }
+
       sortStage.termination_of_payment_id = sort.termination_of_payment_id;
     }
   }

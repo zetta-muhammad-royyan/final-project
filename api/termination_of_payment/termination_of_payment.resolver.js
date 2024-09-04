@@ -2,7 +2,7 @@
 const TerminationOfPayment = require('./termination_of_payment.model');
 
 // *************** IMPORT UTILITIES ***************
-const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { AmountCannotBeMinus, AmountMustHaveMaxTwoDecimal } = require('../../utils/monetary.utils');
 const { TrimString } = require('../../utils/string.utils');
 
@@ -200,8 +200,8 @@ const DeleteTerminationOfPayment = async (_parent, args) => {
       throw new Error('cannot delete termination of payment because already used by billing');
     }
 
-    const deletedTerminationOfPayment = await TerminationOfPayment.findByIdAndDelete(args._id);
-    if (!deletedTerminationOfPayment) {
+    const deletedTerminationOfPayment = await TerminationOfPayment.deleteOne({ _id: ConvertToObjectId(args._id) });
+    if (deletedTerminationOfPayment.deletedCount !== 1) {
       throw new Error('TerminationOfPayments not found');
     }
 

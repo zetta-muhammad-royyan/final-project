@@ -9,7 +9,7 @@ const {
 } = require('./student.helper');
 
 // *************** IMPORT UTILITIES ***************
-const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { TrimString } = require('../../utils/string.utils');
 
 // *************** IMPORT VALIDATOR ***************
@@ -271,8 +271,8 @@ const DeleteStudent = async (_parent, args, { models }) => {
       throw new Error('cannot delete student because already used by billing');
     }
 
-    const deletedStudent = await models.student.findByIdAndDelete(args._id);
-    if (!deletedStudent) {
+    const deletedStudent = await models.student.deleteOne({ _id: ConvertToObjectId(args._id) });
+    if (deletedStudent.deletedCount !== 1) {
       throw new Error('Student not found');
     }
 

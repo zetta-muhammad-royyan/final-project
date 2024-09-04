@@ -2,10 +2,10 @@
 const RegistrationProfile = require('./registration_profile.model');
 
 // *************** IMPORT UTILITIES ***************
-const { IsNumber, IsString } = require('../../utils/primitiveTypes.utils');
-const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { AmountMustHaveMaxTwoDecimal, AmountCannotBeMinus } = require('../../utils/monetary.utils');
 const { TrimString } = require('../../utils/string.utils');
+const { IsEmptyString } = require('../../utils/sanity.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const {
@@ -106,13 +106,8 @@ const GetOneRegistrationProfile = async (_parent, args, { models }) => {
  */
 const CreateRegistrationProfile = async (_parent, args) => {
   try {
-    if (
-      !IsString(args.registration_profile_name) ||
-      !IsNumber(args.scholarship_fee) ||
-      !IsNumber(args.deposit) ||
-      !IsNumber(args.registration_fee)
-    ) {
-      throw new Error('the arguments submitted do not meet the requirements');
+    if (IsEmptyString(args.registration_profile_name)) {
+      throw new Error('registration profile name cannot be empty string');
     }
 
     CheckObjectId(args.termination_of_payment_id);
@@ -157,13 +152,8 @@ const CreateRegistrationProfile = async (_parent, args) => {
  */
 const UpdateRegistrationProfile = async (_parent, args) => {
   try {
-    if (
-      !IsString(args.registration_profile_name) ||
-      !IsNumber(args.scholarship_fee) ||
-      !IsNumber(args.deposit) ||
-      !IsNumber(args.registration_fee)
-    ) {
-      throw new Error('the arguments submitted do not meet the requirements');
+    if (IsEmptyString(args.registration_profile_name)) {
+      throw new Error('registration profile name cannot be empty string');
     }
 
     CheckObjectId(args._id);
@@ -227,8 +217,8 @@ const DeleteRegistrationProfile = async (_parent, args) => {
       throw new Error('cannot delete registration profile because already used by billing');
     }
 
-    const deletedRegistrationProfiles = await RegistrationProfile.findByIdAndDelete(args._id);
-    if (!deletedRegistrationProfiles) {
+    const deletedRegistrationProfile = await RegistrationProfile.deleteOne({ _id: ConvertToObjectId(args._id) });
+    if (deletedRegistrationProfile.deletedCount !== 1) {
       throw new Error('RegistrationProfiles not found');
     }
 
