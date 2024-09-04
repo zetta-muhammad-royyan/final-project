@@ -1,17 +1,23 @@
+// *************** IMPORT MODULE ***************
+const Billing = require('./billing.model');
+const Term = require('../term/term.model');
+const Deposit = require('../deposit/deposit.model');
+
 // *************** IMPORT UTILITIES ***************
-const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { AmountMustHaveMaxTwoDecimal, AmountMustGreaterThanZero } = require('../../utils/monetary.utils');
+const { IsUndefinedOrNull } = require('../../utils/sanity.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const {
   CheckIfStudentHasBillingOrNot,
-  GenerateBillingBasedOnPayer,
   FindBillingWithLookup,
-  PayDeposit,
-  PayTerms,
-  RemovePaidTermAmount,
-  CreateLookupPipelineStage,
+  GenerateBillingData,
+  PrepareToPayDeposit,
+  PrepareToPayTerms,
+  PrepareTermAmountRemoval,
   CreateConcatPipelineStage,
+  CreateLookupPipelineStage,
   CreateMatchPipelineStage,
   CreateSortPipelineStage,
 } = require('./billing.helper');
@@ -214,8 +220,8 @@ const GenerateBilling = async (_parent, args, { models }) => {
   // *************** validate payer
   const validatedPayer = await ValidatePayer(args.payer, args.payment_type, student);
 
-  //*************** generate billing according to the number of payers
-  const billings = await GenerateBillingBasedOnPayer(
+  //*************** generate billing data according to the number of payers
+  const billings = await GenerateBillingData(
     args.student_id,
     registrationProfile._id,
     validatedPayer,
@@ -225,7 +231,100 @@ const GenerateBilling = async (_parent, args, { models }) => {
     registrationProfile.deposit
   );
 
-  return billings;
+  const allBillingEntries = [];
+  const allTermEntries = [];
+  const allDepositEntries = [];
+
+  for (let billing of billings) {
+    //*************** create Billing Entry
+    const newBilling = {
+      student_id: billing.student_id,
+      registration_profile_id: billing.registration_profile_id,
+      payer: billing.payer,
+      total_amount: billing.total_amount,
+      paid_amount: 0,
+      remaining_due: billing.remaining_due,
+    };
+
+    allBillingEntries.push(newBilling);
+  }
+
+  //*************** insert all billings at once
+  const createdBillings = await Billing.insertMany(allBillingEntries);
+
+  //*************** prepare terms and deposits
+  createdBillings.forEach((createdBilling, index) => {
+    const billing = billings[index];
+
+    //*************** prepare Terms with the correct billing ID
+    if (billing.term_data) {
+      const terms = billing.term_data.map((term) => ({
+        ...term,
+        billing_id: createdBilling._id,
+      }));
+      allTermEntries.push(...terms);
+    }
+
+    //*************** prepare Deposit with the correct billing ID
+    if (billing.deposit_data) {
+      const deposit = {
+        ...billing.deposit_data,
+        billing_id: createdBilling._id,
+      };
+      allDepositEntries.push(deposit);
+    }
+  });
+
+  //*************** insert all terms and deposits in one go
+  let insertedTerms = [];
+  if (allTermEntries.length > 0) {
+    insertedTerms = await Term.insertMany(allTermEntries);
+  }
+
+  let insertedDeposit = [];
+  if (allDepositEntries.length > 0) {
+    insertedDeposit = await Deposit.insertMany(allDepositEntries);
+  }
+
+  // Update Billings with term_ids and deposit_id
+  const updateQueries = [];
+
+  insertedTerms.forEach((term) => {
+    updateQueries.push({
+      updateOne: {
+        filter: { _id: term.billing_id },
+        update: { $addToSet: { term_ids: term._id } },
+      },
+    });
+  });
+
+  insertedDeposit.forEach((deposit) => {
+    updateQueries.push({
+      updateOne: {
+        filter: { _id: deposit.billing_id },
+        update: { $set: { deposit_id: deposit._id } },
+      },
+    });
+  });
+
+  if (updateQueries.length > 0) {
+    await Billing.bulkWrite(updateQueries);
+  }
+
+  //*************** combine inserted term and document with billing, then can load using dataloader
+  const updatedBilling = createdBillings.map((billing) => {
+    const billingObject = billing.toObject();
+    const termIds = insertedTerms.filter((term) => term.billing_id.equals(billingObject._id)).map((term) => term._id);
+    const deposit = insertedDeposit.find((deposit) => deposit.billing_id.equals(billingObject._id));
+
+    return {
+      ...billingObject,
+      term_ids: termIds,
+      deposit_id: deposit ? deposit._id : null,
+    };
+  });
+
+  return updatedBilling;
 };
 
 /**
@@ -259,10 +358,36 @@ const AddPayment = async (_parent, args, { models }) => {
     //*************** billing hold deposit amount
     if (billing.deposit_id) {
       //*************** pay deposit first
-      const remainder = await PayDeposit(billing.deposit[0], args.amount);
+      const { remainder, updatedDeposit } = await PrepareToPayDeposit(billing.deposit[0], args.amount);
+      if (!IsUndefinedOrNull(updatedDeposit)) {
+        await Deposit.updateOne(
+          { _id: ConvertToObjectId(updatedDeposit._id) },
+          {
+            payment_status: updatedDeposit.payment_status,
+            amount_paid: updatedDeposit.amount_paid,
+            remaining_amount: updatedDeposit.remaining_amount,
+          }
+        );
+      }
 
       //*************** if remainder amount more than 0 then pay the terms
-      await PayTerms(billing.terms, remainder);
+      const updatedTerms = PrepareToPayTerms(billing.terms, remainder);
+      const bulkOperations = updatedTerms.map((term) => ({
+        updateOne: {
+          filter: { _id: term._id },
+          update: {
+            $set: {
+              payment_status: term.payment_status,
+              amount_paid: term.amount_paid,
+              remaining_amount: term.remaining_amount,
+            },
+          },
+        },
+      }));
+
+      if (bulkOperations.length > 0) {
+        await Term.bulkWrite(bulkOperations);
+      }
     } else {
       //*************** if billing doesnt hold deposit amount then fetch another student billing
       const billings = await FindBillingWithLookup({ studentId: billing.student_id }, ['term', 'deposit']);
@@ -277,7 +402,23 @@ const AddPayment = async (_parent, args, { models }) => {
       }
 
       //*************** deposit on another billing already paid then pay the terms
-      await PayTerms(billing.terms, args.amount);
+      const updatedTerms = PrepareToPayTerms(billing.terms, args.amount);
+      const bulkOperations = updatedTerms.map((term) => ({
+        updateOne: {
+          filter: { _id: term._id },
+          update: {
+            $set: {
+              payment_status: term.payment_status,
+              amount_paid: term.amount_paid,
+              remaining_amount: term.remaining_amount,
+            },
+          },
+        },
+      }));
+
+      if (bulkOperations.length > 0) {
+        await Term.bulkWrite(bulkOperations);
+      }
     }
 
     const paidAmount =
@@ -335,7 +476,23 @@ const RemovePayment = async (_parent, args, { models }) => {
     }
 
     //*************** remove paid term amount
-    await RemovePaidTermAmount(billing.terms, args.amount);
+    const updatedTerms = PrepareTermAmountRemoval(billing.terms, args.amount);
+    const bulkOperations = updatedTerms.map((term) => ({
+      updateOne: {
+        filter: { _id: term._id },
+        update: {
+          $set: {
+            payment_status: term.payment_status,
+            amount_paid: term.amount_paid,
+            remaining_amount: term.remaining_amount,
+          },
+        },
+      },
+    }));
+
+    if (bulkOperations.length > 0) {
+      await Term.bulkWrite(bulkOperations);
+    }
 
     const paidAmount =
       args.amount >= billing.paid_amount
