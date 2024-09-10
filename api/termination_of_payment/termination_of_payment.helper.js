@@ -69,6 +69,7 @@ const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationO
     //*************** search registration profile who has specific termination of payment id and count the document
     const registrationProfileExists = await RegistrationProfile.countDocuments({
       termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId),
+      status: 'active',
     });
 
     return registrationProfileExists > 0;
@@ -86,7 +87,7 @@ const CheckIfTerminationOfPaymentUsedByBilling = async (terminationOfPaymentId) 
   try {
     //*************** find registration profile first
     const registrationProfiles = await RegistrationProfile.find(
-      { termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId) },
+      { termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId), status: 'active' },
       { _id: 1 }
     );
 

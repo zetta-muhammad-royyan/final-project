@@ -42,7 +42,7 @@ const GetAllRegistrationProfiles = async (_parent, { filter, sort, pagination })
     ValidatePagination(page, limit);
 
     //*************** base pipeline
-    const pipeline = [];
+    const pipeline = [{ $match: { status: 'active' } }];
 
     //*************** $match stage, only active when filter contain data
     const matchStage = CreatePipelineMatchStage(filter);
@@ -83,7 +83,7 @@ const GetOneRegistrationProfile = async (_parent, args) => {
     CheckObjectId(args._id);
 
     //*************** fetch registration profile using id which is sent via parameter
-    const registrationProfile = await RegistrationProfile.findById(args._id);
+    const registrationProfile = await RegistrationProfile.findOne({ _id: ConvertToObjectId(args._id), status: 'active' });
     if (!registrationProfile) {
       throw new Error('RegistrationProfile not found');
     }
@@ -186,7 +186,7 @@ const UpdateRegistrationProfile = async (_parent, args) => {
     }
 
     //*************** fetch registration profile first, to update it later
-    const registrationProfile = await RegistrationProfile.findById(args._id);
+    const registrationProfile = await RegistrationProfile.findOne({ _id: ConvertToObjectId(args._id), status: 'active' });
     if (!registrationProfile) {
       throw new Error('Registration Profile not found');
     }
@@ -256,8 +256,11 @@ const DeleteRegistrationProfile = async (_parent, args) => {
       throw new Error('cannot delete registration profile because already used by billing');
     }
 
-    const deletedRegistrationProfile = await RegistrationProfile.deleteOne({ _id: ConvertToObjectId(args._id) });
-    if (deletedRegistrationProfile.deletedCount !== 1) {
+    const deletedRegistrationProfile = await RegistrationProfile.updateOne(
+      { _id: ConvertToObjectId(args._id), status: 'active' },
+      { status: 'deleted' }
+    );
+    if (deletedRegistrationProfile.nModified !== 1) {
       throw new Error('RegistrationProfiles not found');
     }
 

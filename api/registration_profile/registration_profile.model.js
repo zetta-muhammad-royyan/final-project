@@ -23,6 +23,11 @@ const registrationProfileSchema = new mongoose.Schema({
     ref: 'termination_of_payments',
     required: true,
   },
+  status: {
+    type: String,
+    enum: ['active', 'deleted'],
+    default: 'active',
+  },
 });
 
 const RegistrationProfile = mongoose.model('RegistrationProfile', registrationProfileSchema, 'registration_profiles');

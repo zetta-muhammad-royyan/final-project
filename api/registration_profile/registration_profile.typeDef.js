@@ -10,6 +10,7 @@ const registrationProfiles = gql`
     deposit: Float!
     registration_fee: Float!
     termination_of_payment: TerminationOfPayment
+    status: String
   }
 
   # Inputs
