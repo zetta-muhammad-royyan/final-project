@@ -120,6 +120,7 @@ const CreateMatchPipelineStage = (filter) => {
  */
 const CheckIfStudentUsedByBilling = async (studentId) => {
   try {
+    //*************** check if student already used by billing by counting billing document who has specific student id
     const billingExist = await Billing.countDocuments({ student_id: ConvertToObjectId(studentId) });
 
     return billingExist > 0;

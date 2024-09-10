@@ -135,6 +135,7 @@ const GetAllStudents = async (_parent, { filter, sort, pagination }) => {
       },
     });
 
+    //*************** fetch student using previously built pipeline
     const students = await Student.aggregate(pipeline);
     return students;
   } catch (error) {
@@ -154,6 +155,7 @@ const GetOneStudent = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
 
+    //*************** fetch student using id
     const student = await Student.findById(args._id);
     if (!student) {
       throw new Error('Student not found');
@@ -187,6 +189,7 @@ const CreateStudent = async (_parent, args, { models }) => {
   try {
     ValidateStudentInput(args.civility, args.first_name, args.last_name);
 
+    //*************** create new student
     const newStudent = new models.student({
       civility: args.civility,
       first_name: TrimString(args.first_name),
@@ -196,6 +199,7 @@ const CreateStudent = async (_parent, args, { models }) => {
 
     let createdStudent = await newStudent.save();
 
+    //*************** prepare financial support data to add, replace or delete it later
     const financialSupportData = PrepareFinancialSupportData(createdStudent, args.financial_support);
 
     //*************** if no one data to be inserted then just return new created student
@@ -211,10 +215,12 @@ const CreateStudent = async (_parent, args, { models }) => {
     // *************** if any financial support then insert and update student with new FS id
     let financialSupportIds = [];
     if (financialSupportData.newFinancialSupportsData.length > 0) {
+      //*************** from inserted docs then only get the id
       const insertedDocs = await FinancialSupport.insertMany(financialSupportData.newFinancialSupportsData, { lean: true });
       financialSupportIds = insertedDocs.map((doc) => doc._id);
     }
 
+    //*************** update student financial_support_ids
     createdStudent.financial_support_ids = financialSupportIds;
 
     const updatedStudent = await createdStudent.save();
@@ -260,7 +266,7 @@ const UpdateStudent = async (_parent, args) => {
       throw new Error('Student not found');
     }
 
-    //*************** cannot update registration profile if already used by billing
+    //*************** check if student already used by billinng or not
     const usedByBilling = await CheckIfStudentUsedByBilling(args._id);
     if (usedByBilling) {
       //*************** throw error if user want to edit financial support or regisration profile
@@ -272,6 +278,7 @@ const UpdateStudent = async (_parent, args) => {
         throw new Error('cannot update financial support or registration profile if billing already generated for this student');
       }
 
+      //*************** can only update civily, firs_name, last_name if student already used by billing
       student.civility = args.civility ? args.civility : student.civility;
       student.first_name = args.first_name ? TrimString(args.first_name) : student.first_name;
       student.last_name = args.last_name ? TrimString(args.last_name) : student.last_name;
@@ -280,6 +287,7 @@ const UpdateStudent = async (_parent, args) => {
       return updatedStudent;
     }
 
+    //*************** prepare financial support data to add, replace or delete it later
     const financialSupportData = await PrepareFinancialSupportData(student, args.financial_support);
 
     //*************** if theres any financialSupport to be deleted
@@ -290,11 +298,12 @@ const UpdateStudent = async (_parent, args) => {
     // *************** if any financial support then insert and update student with new FS id
     let financialSupportIds = [];
     if (financialSupportData.newFinancialSupportsData.length > 0) {
+      //*************** from the inserted docs only get the id
       const insertedDocs = await FinancialSupport.insertMany(financialSupportData.newFinancialSupportsData, { lean: true });
       financialSupportIds = insertedDocs.map((doc) => doc._id);
     }
 
-    // *************** Update student with new data
+    // *************** Update student with new data if provided
     student.civility = args.civility ? args.civility : student.civility;
     student.first_name = args.first_name ? TrimString(args.first_name) : student.first_name;
     student.last_name = args.last_name ? TrimString(args.last_name) : student.last_name;
