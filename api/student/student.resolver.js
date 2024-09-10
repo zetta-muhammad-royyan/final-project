@@ -15,9 +15,9 @@ const {
 } = require('./student.helper');
 
 // *************** IMPORT UTILITIES ***************
-const { CheckObjectId } = require('../../utils/mongoose.utils');
+const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { TrimString } = require('../../utils/string.utils');
-const { IsUndefinedOrNull, IsEmptyString } = require('../../utils/sanity.utils');
+const { IsUndefinedOrNull, IsEmptyString, IsNull } = require('../../utils/sanity.utils');
 
 // *************** IMPORT VALIDATOR ***************
 const { ValidatePagination, ValidateStudentInput } = require('./student.validator');
@@ -49,7 +49,7 @@ const GetAllStudents = async (_parent, { filter, sort, pagination }) => {
     ValidatePagination(page, limit);
 
     //*************** base pipeline
-    const pipeline = [];
+    const pipeline = [{ $match: { status: 'active' } }];
 
     // *************** check if need to lookup to registration profile or not
     let needsToRegistrationProfileLookup = sort && sort.registration_profile_name;
@@ -156,7 +156,7 @@ const GetOneStudent = async (_parent, args) => {
     CheckObjectId(args._id);
 
     //*************** fetch student using id
-    const student = await Student.findById(args._id);
+    const student = await Student.findOne({ _id: ConvertToObjectId(args._id), status: 'active' });
     if (!student) {
       throw new Error('Student not found');
     }
@@ -292,7 +292,10 @@ const UpdateStudent = async (_parent, args) => {
 
     //*************** if theres any financialSupport to be deleted
     if (financialSupportData.idsToDelete.length > 0) {
-      await FinancialSupport.deleteMany({ _id: { $in: financialSupportData.idsToDelete } });
+      await FinancialSupport.updateMany(
+        { _id: { $in: financialSupportData.idsToDelete }, status: 'active' },
+        { $set: { status: 'deleted' } }
+      );
     }
 
     // *************** if any financial support then insert and update student with new FS id
@@ -303,11 +306,14 @@ const UpdateStudent = async (_parent, args) => {
       financialSupportIds = insertedDocs.map((doc) => doc._id);
     }
 
+    //*************** determine if student financial support is updated with new data, replaced with empty array, or use previous data
+    const newFinancialSupportIds = IsNull(args.financial_support) ? student.financial_support_ids : financialSupportIds;
+
     // *************** Update student with new data if provided
     student.civility = args.civility ? args.civility : student.civility;
     student.first_name = args.first_name ? TrimString(args.first_name) : student.first_name;
     student.last_name = args.last_name ? TrimString(args.last_name) : student.last_name;
-    student.financial_support_ids = financialSupportIds.length > 0 ? financialSupportIds : student.financial_support_ids;
+    student.financial_support_ids = newFinancialSupportIds;
     student.registration_profile_id = args.registration_profile_id ? args.registration_profile_id : student.registration_profile_id;
 
     const updatedStudent = await student.save();
@@ -337,14 +343,17 @@ const DeleteStudent = async (_parent, args) => {
       throw new Error('cannot delete student because already used by billing');
     }
 
-    const deletedStudent = await Student.findByIdAndDelete(args._id, { financial_support_ids: 1 });
+    const deletedStudent = await Student.findOneAndUpdate({ _id: ConvertToObjectId(args._id), status: 'active' }, { status: 'deleted' });
     if (!deletedStudent) {
       throw new Error('Student not found');
     }
 
     // *************** Delete student financial supports if any
     if (deletedStudent.financial_support_ids.length > 0) {
-      await FinancialSupport.deleteMany({ _id: { $in: deletedStudent.financial_support_ids } });
+      await FinancialSupport.updateMany(
+        { _id: { $in: deletedStudent.financial_support_ids }, status: 'active' },
+        { $set: { status: 'deleted' } }
+      );
     }
 
     return 'Student deleted successfully';

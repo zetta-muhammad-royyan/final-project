@@ -27,6 +27,11 @@ const studentSchema = new mongoose.Schema({
     ref: 'registration_profiles',
     required: true,
   },
+  status: {
+    type: String,
+    enum: ['active', 'deleted'],
+    default: 'active',
+  },
 });
 
 const Student = mongoose.model('Student', studentSchema, 'students');

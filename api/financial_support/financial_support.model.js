@@ -20,6 +20,11 @@ const financialSupportSchema = new mongoose.Schema({
     ref: 'students',
     required: true,
   },
+  status: {
+    type: String,
+    enum: ['active', 'deleted'],
+    default: 'active',
+  },
 });
 
 const FinancialSupport = mongoose.model('FinancialSupport', financialSupportSchema, 'financial_supports');

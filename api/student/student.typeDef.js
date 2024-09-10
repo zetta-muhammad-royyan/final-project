@@ -10,6 +10,7 @@ const student = gql`
     last_name: String!
     financial_supports: [FinancialSupport]!
     registration_profile: RegistrationProfile!
+    status: String
   }
 
   # input

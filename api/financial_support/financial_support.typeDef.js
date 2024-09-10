@@ -9,6 +9,7 @@ const financialSupport = gql`
     first_name: String!
     last_name: String!
     student_id: ID!
+    status: String
   }
 
   # inputs
