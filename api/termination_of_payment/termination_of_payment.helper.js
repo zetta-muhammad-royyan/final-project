@@ -80,24 +80,26 @@ const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationO
 /**
  * check if termination of payment already used by billing
  * @param {string} terminationOfPaymentId
- * @returns {number}
+ * @returns {boolean}
  */
 const CheckIfTerminationOfPaymentUsedByBilling = async (terminationOfPaymentId) => {
   try {
     //*************** find registration profile first
-    const registrationProfile = await RegistrationProfile.findOne(
+    const registrationProfiles = await RegistrationProfile.find(
       { termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId) },
       { _id: 1 }
     );
 
     //*************** if termintation of payment not been used by any registration profile then termination of payment also not been used by billing yet
-    if (!registrationProfile) {
+    if (registrationProfiles.length === 0) {
       return false;
     }
 
     //*************** search billing who has specific registration profile id and count the document
     const billingExist = await Billing.countDocuments({
-      registration_profile_id: ConvertToObjectId(registrationProfile._id),
+      registration_profile_id: {
+        $in: registrationProfiles.map((rf) => ConvertToObjectId(rf._id)),
+      },
     });
 
     return billingExist > 0;
