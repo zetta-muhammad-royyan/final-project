@@ -22,7 +22,6 @@ const student = gql`
 
   input StudentSortInput {
     registration_profile_name: Int
-    registration_profile_id: Int
     financial_support_full_name: Int
   }
 

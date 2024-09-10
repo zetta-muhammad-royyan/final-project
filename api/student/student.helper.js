@@ -64,14 +64,6 @@ const CreateSortPipelineStage = (sort) => {
         sortStage['registration_profile.name'] = sort.registration_profile_name;
       }
 
-      if (sort.registration_profile_id) {
-        if (!IsSortingInput(sort.registration_profile_id)) {
-          throw new Error('the sorting input must be 1 for ascending or -1 for descending');
-        }
-
-        sortStage.registration_profile_id = sort.registration_profile_id;
-      }
-
       if (sort.financial_support_full_name) {
         if (!IsSortingInput(sort.financial_support_full_name)) {
           throw new Error('the sorting input must be 1 for ascending or -1 for descending');

@@ -34,7 +34,6 @@ const { ValidatePagination, ValidateStudentInput } = require('./student.validato
  * @param {String} args.filter.financial_support_full_name
  * @param {Object} args.sort
  * @param {String} args.sort.registration_profile_name
- * @param {String} args.sort.registration_profile_id
  * @param {String} args.sort.financial_support_full_name
  * @param {Object} args.pagination
  * @param {Int} args.pagination.page
