@@ -6,7 +6,7 @@ const terminationOfPaymentLoader = require('../termination_of_payment/terminatio
 const { CheckObjectId, ConvertToObjectId } = require('../../utils/mongoose.utils');
 const { AmountMustHaveMaxTwoDecimal, AmountCannotBeMinus } = require('../../utils/monetary.utils');
 const { TrimString } = require('../../utils/string.utils');
-const { IsEmptyString, IsUndefinedOrNull } = require('../../utils/sanity.utils');
+const { IsEmptyString, IsUndefinedOrNull, IsSortingInput } = require('../../utils/sanity.utils');
 
 // *************** IMPORT HELPER FUNCTION ***************
 const {
@@ -14,6 +14,7 @@ const {
   CreatePipelineSortStage,
   CheckIfRegistrationProfileUsedByBilling,
   CheckIfRegistrationProfileUsedByStudent,
+  CreateLookupPipelineStage,
 } = require('./registration_profile.helper');
 
 // *************** IMPORT VALIDATOR ***************
@@ -30,7 +31,7 @@ const { ValidatePagination } = require('./registration_profile.validator');
  * @param {String} args.filter.termination_of_payment_id
  * @param {Object} args.sort
  * @param {String} args.sort.registration_profile_name
- * @param {String} args.sort.termination_of_payment_id
+ * @param {String} args.sort.termination_of_payment_description
  * @param {Object} args.pagination
  * @param {Int} args.pagination.page
  * @param {Int} args.pagination.limit
@@ -43,6 +44,18 @@ const GetAllRegistrationProfiles = async (_parent, { filter, sort, pagination })
 
     //*************** base pipeline
     const pipeline = [{ $match: { status: 'active' } }];
+
+    //*************** if sorting based on termination of payment description, then need to lookup first
+    const needToTerminationOfPaymentLookup = sort && IsSortingInput(sort.termination_of_payment_description);
+    if (needToTerminationOfPaymentLookup) {
+      const terminationOfPaymentLookupStage = CreateLookupPipelineStage(
+        'termination_of_payments',
+        'termination_of_payment_id',
+        '_id',
+        'termination_of_payment'
+      );
+      pipeline.push(...terminationOfPaymentLookupStage);
+    }
 
     //*************** $match stage, only active when filter contain data
     const matchStage = CreatePipelineMatchStage(filter);

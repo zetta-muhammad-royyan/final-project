@@ -21,7 +21,7 @@ const registrationProfiles = gql`
 
   input RegistrationProfileSortingInput {
     registration_profile_name: Int
-    termination_of_payment_id: Int
+    termination_of_payment_description: Int
   }
 
   input RegistrationProfilePaginationInput {
