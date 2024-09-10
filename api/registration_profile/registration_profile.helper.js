@@ -66,6 +66,7 @@ const CreatePipelineSortStage = (sort) => {
  */
 const CheckIfRegistrationProfileUsedByStudent = async (registrationProfileId) => {
   try {
+    //*************** check if registation profile already used by student by counting student document who has specific registation profile id
     const studentExist = await Student.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
 
     return studentExist > 0;
@@ -81,6 +82,7 @@ const CheckIfRegistrationProfileUsedByStudent = async (registrationProfileId) =>
  */
 const CheckIfRegistrationProfileUsedByBilling = async (registrationProfileId) => {
   try {
+    //*************** check if registation profile already used by billing by counting billing document who has specific registation profile id
     const billingExist = await Billing.countDocuments({ registration_profile_id: ConvertToObjectId(registrationProfileId) });
 
     return billingExist > 0;

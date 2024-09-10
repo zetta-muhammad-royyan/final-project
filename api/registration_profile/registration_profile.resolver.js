@@ -59,6 +59,7 @@ const GetAllRegistrationProfiles = async (_parent, { filter, sort, pagination })
     //*************** pagination pipeline, with $skip and $limit
     pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
 
+    //*************** fetch registration profile uses previously built pipeline
     const registrationProfiles = await RegistrationProfile.aggregate(pipeline);
 
     return registrationProfiles;
@@ -81,6 +82,7 @@ const GetOneRegistrationProfile = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
 
+    //*************** fetch registration profile using id which is sent via parameter
     const registrationProfile = await RegistrationProfile.findById(args._id);
     if (!registrationProfile) {
       throw new Error('RegistrationProfile not found');
@@ -123,6 +125,7 @@ const CreateRegistrationProfile = async (_parent, args) => {
     AmountCannotBeMinus(args.deposit);
     AmountCannotBeMinus(args.registration_fee);
 
+    //*************** create new registration profile
     const newRegistrationProfile = new RegistrationProfile({
       registration_profile_name: TrimString(args.registration_profile_name),
       scholarship_fee: args.scholarship_fee,
@@ -182,15 +185,16 @@ const UpdateRegistrationProfile = async (_parent, args) => {
       CheckObjectId(args.termination_of_payment_id);
     }
 
+    //*************** fetch registration profile first, to update it later
     const registrationProfile = await RegistrationProfile.findById(args._id);
     if (!registrationProfile) {
       throw new Error('Registration Profile not found');
     }
 
-    //*************** can only update registration profile name if billing already generated
+    //*************** check if registration profile already used by billing
     const usedByBilling = await CheckIfRegistrationProfileUsedByBilling(args._id);
     if (usedByBilling) {
-      console.log(args.deposit);
+      //*************** cannot update deposit, registration_fee, scholarship_fee and termination of payment id if registration profile used by billing
       if (
         !IsUndefinedOrNull(args.deposit) ||
         !IsUndefinedOrNull(args.registration_fee) ||
@@ -202,6 +206,7 @@ const UpdateRegistrationProfile = async (_parent, args) => {
         );
       }
 
+      //*************** can only update registration profile name if billing already generated
       registrationProfile.registration_profile_name = args.registration_profile_name
         ? TrimString(args.registration_profile_name)
         : registrationProfile.registration_profile_name;
@@ -210,7 +215,7 @@ const UpdateRegistrationProfile = async (_parent, args) => {
       return updatedRegistrationProfile;
     }
 
-    //*************** update registration profile with new data
+    //*************** update registration profile with new data if provided
     registrationProfile.registration_profile_name = args.registration_profile_name
       ? TrimString(args.registration_profile_name)
       : registrationProfile.registration_profile_name;
