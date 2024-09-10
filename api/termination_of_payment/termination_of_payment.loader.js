@@ -5,7 +5,10 @@ const DataLoader = require('dataloader');
 const TerminationOfPayment = require('./termination_of_payment.model');
 
 const Loader = new DataLoader(async (ids) => {
+  //*************** batch termination of payment
   const terminationOfPayments = await TerminationOfPayment.find({ _id: { $in: ids } });
+
+  //*************** mapping termination of payment using its own id as a key
   const terminationOfPaymentMap = {};
   terminationOfPayments.forEach((t) => {
     terminationOfPaymentMap[t._id] = t;

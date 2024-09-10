@@ -59,6 +59,7 @@ const GetAllTerminationOfPayments = async (_parent, { filter, sort, pagination }
     //*************** pagination pipeline with $skip and $limit
     pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
 
+    //*************** fetch termination of payment uses previously built pipeline
     const terminationOfPayments = await TerminationOfPayment.aggregate(pipeline);
     return terminationOfPayments;
   } catch (error) {
@@ -77,6 +78,7 @@ const GetOneTerminationOfPayment = async (_parent, { _id }) => {
   try {
     CheckObjectId(_id);
 
+    //*************** fetcg termintation of payment using id which is sent via parameter
     const terminationOfPayments = await TerminationOfPayment.findById(_id);
     if (!terminationOfPayments) {
       throw new Error('TerminationOfPayments not found');
@@ -111,6 +113,7 @@ const CreateTerminationOfPayment = async (_parent, args) => {
     //*************** amount cannot be minus
     AmountCannotBeMinus(args.additional_cost);
 
+    //*************** create new termination of payment
     const newTerminationOfPayment = new TerminationOfPayment({
       description: TrimString(args.description),
       termination: args.term_payments.length,
@@ -160,14 +163,16 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
       ValidateTermPayment(args.term_payments);
     }
 
+    //*************** fetch termination of payment first to update it later
     const termination = await TerminationOfPayment.findById(args._id);
     if (!termination) {
       throw new Error('TerminationOfPayment not found');
     }
 
-    //*************** cannot update terminnation of payment because generated billing use this termination of payment
+    //*************** check if termination of payment already used by billing or not
     const usedByBilling = await CheckIfTerminationOfPaymentUsedByBilling(args._id);
     if (usedByBilling) {
+      //*************** cannot update additional_cost and term_payments if already used by billing
       if (
         !IsUndefinedOrNull(args.additional_cost) ||
         !IsUndefinedOrNull(args.term_payments) ||
@@ -176,11 +181,13 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
         throw new Error('cannot update additional cost or term payments if billing already generated using this termination of payment');
       }
 
+      //*************** can only update description if termination of payment already used by billing
       termination.description = args.description ? TrimString(args.description) : termination.description;
       const updatedTerminationOfPayment = await termination.save();
       return updatedTerminationOfPayment;
     }
 
+    //*************** update termination of payment data with new one if sent via parameter, if not then use previous data
     termination.description = args.description ? TrimString(args.description) : termination.description;
     termination.termination = args.term_payments ? args.term_payments.length : termination.termination;
     termination.term_payments = args.term_payments ? args.term_payments : termination.term_payments;
@@ -210,12 +217,13 @@ const DeleteTerminationOfPayment = async (_parent, args) => {
       throw new Error('cannot delete termination of payment because already used by registration profile');
     }
 
-    //*************** cannot update terminnation of payment because generated billing use this termination of payment
+    //*************** cannot delete terminnation of payment because generated billing use this termination of payment
     const usedByBilling = await CheckIfTerminationOfPaymentUsedByBilling(args._id);
     if (usedByBilling) {
       throw new Error('cannot delete termination of payment because already used by billing');
     }
 
+    //*************** delete termination of payment by id
     const deletedTerminationOfPayment = await TerminationOfPayment.deleteOne({ _id: ConvertToObjectId(args._id) });
     if (deletedTerminationOfPayment.deletedCount !== 1) {
       throw new Error('TerminationOfPayments not found');

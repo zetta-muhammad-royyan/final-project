@@ -66,6 +66,7 @@ const CreateSortPipeline = (sort) => {
  */
 const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationOfPaymentId) => {
   try {
+    //*************** search registration profile who has specific termination of payment id and count the document
     const registrationProfileExists = await RegistrationProfile.countDocuments({
       termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId),
     });
@@ -83,15 +84,18 @@ const CheckIfTerminationOfPaymentUsedByRegistrationProfile = async (terminationO
  */
 const CheckIfTerminationOfPaymentUsedByBilling = async (terminationOfPaymentId) => {
   try {
+    //*************** find registration profile first
     const registrationProfile = await RegistrationProfile.findOne(
       { termination_of_payment_id: ConvertToObjectId(terminationOfPaymentId) },
       { _id: 1 }
     );
 
+    //*************** if termintation of payment not been used by any registration profile then termination of payment also not been used by billing yet
     if (!registrationProfile) {
       return false;
     }
 
+    //*************** search billing who has specific registration profile id and count the document
     const billingExist = await Billing.countDocuments({
       registration_profile_id: ConvertToObjectId(registrationProfile._id),
     });
