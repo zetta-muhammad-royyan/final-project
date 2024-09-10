@@ -83,6 +83,7 @@ const FindBillingWithLookup = async (query, lookups = []) => {
  * @returns {Array<Object>} - An array of term objects ready for insertion.
  */
 const GenerateTermsData = (termPayments, termAmount) => {
+  //*************** generate term payment based on payment plan
   const termData = termPayments.map((term) => {
     const percentage = term.percentage / 100;
     const amount = parseFloat((termAmount * percentage).toFixed(2));
@@ -153,6 +154,7 @@ const GenerateBillingData = async (studentId, registrationProfileId, payer, term
 
   //*************** this block only executed when payer is mix or only financial support
   for (let i = 0; i < payer.length; i++) {
+    //*************** if payer is financila support
     if (payer[i].type === 'FinancialSupport') {
       const termData = GenerateTermsData(termPayments, termAmountForEachPayer[i]);
       billingData.push({
@@ -166,6 +168,7 @@ const GenerateBillingData = async (studentId, registrationProfileId, payer, term
       });
     }
 
+    //*************** if payer is a student and not only that student as a payer (mix with financial support)
     if (payer[i].type === 'Student' && !isPayerOnlyStudent) {
       const depositData = GenerateDepositData(termPayments, deposit);
       const termData = GenerateTermsData(termPayments, termAmountForEachPayer[i]);
@@ -197,7 +200,7 @@ const GenerateBillingData = async (studentId, registrationProfileId, payer, term
     });
   }
 
-  // *************** if student pay by itself ***************
+  // *************** if student pay by itself
   if (!isPayerMix && isPayerOnlyStudent) {
     const depositData = GenerateDepositData(termPayments, deposit);
     const termData = await GenerateTermsData(termPayments, termAmount);
@@ -226,11 +229,13 @@ const GenerateBillingData = async (studentId, registrationProfileId, payer, term
  * @returns {number[]} An arrays for totalAmount and termAmount, each distributed precisely among payers.
  */
 const CalculateTermAmountForEachPayer = (payers, termAmount) => {
+  //*************** divide the amount to be paid based on the percentage of each payer
   const amountForEachPayer = payers.map((payer) => {
     const coveragePercentage = payer.cost_coverage / 100;
     return parseFloat((termAmount * coveragePercentage).toFixed(2));
   });
 
+  //*************** make divided amount precise
   const totalDistributed = amountForEachPayer.reduce((acc, curr) => acc + curr, 0);
   const difference = parseFloat((termAmount - totalDistributed).toFixed(2));
   if (difference !== 0) {
@@ -249,6 +254,7 @@ const CalculateTermAmountForEachPayer = (payers, termAmount) => {
  * @returns {Object}
  */
 const PrepareToPayDeposit = (deposit, paidAmount) => {
+  //*************** if deposit already paid then return back the paid amount
   if (deposit.amount_paid === deposit.amount) {
     return {
       remainder: parseFloat(paidAmount).toFixed(2),
@@ -288,6 +294,7 @@ const PrepareToPayTerms = (terms, paidAmount) => {
   const termsToUpdate = [];
 
   for (let i = 0; i < terms.length; i++) {
+    //*************** can only pay term if remaining amount is still and the remainder greater than zero
     if (terms[i].remaining_amount > 0 && remainder > 0) {
       const isPaid = remainder - terms[i].remaining_amount >= 0;
       const paymentStatus = isPaid ? 'paid' : 'partial_paid';
@@ -330,7 +337,9 @@ const PrepareTermAmountRemoval = (terms, removedAmount) => {
   let remainder = parseFloat(removedAmount).toFixed(2);
   const termsToUpdate = [];
 
+  //*************** remove term amount from back or latest
   for (let i = terms.length - 1; i >= 0; i--) {
+    //*************** can only remove term if paid amount is still and the remainder greater than zero
     if (terms[i].amount_paid > 0 && remainder > 0) {
       const isFullRemoval = remainder >= terms[i].amount_paid;
       const paymentStatus = isFullRemoval ? 'billed' : 'partial_paid';

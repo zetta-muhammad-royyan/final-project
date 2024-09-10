@@ -83,6 +83,7 @@ const GetAllBillings = async (_parent, { filter, sort, pagination }) => {
       addFieldStage.$addFields.student_full_name = concatenatedStudentName;
     }
 
+    //*************** because payer can be student or financial support then lookup to both
     if (needToPayerLookup) {
       //*************** if payer is student
       const payerIsStudentLookupStage = CreateLookupPipelineStage('students', 'payer', '_id', 'payer_student');
@@ -151,6 +152,7 @@ const GetAllBillings = async (_parent, { filter, sort, pagination }) => {
     pipeline.push({ $skip: (page - 1) * limit });
     pipeline.push({ $limit: limit });
 
+    //*************** fetch billing using previously built pipeline
     const billings = await Billing.aggregate(pipeline);
     return billings;
   } catch (error) {
@@ -170,6 +172,7 @@ const GetOneBilling = async (_parent, args) => {
   try {
     CheckObjectId(args._id);
 
+    //*************** fetch billing
     const billing = Billing.findById(args._id);
     if (!billing) {
       throw new Error('Billing not found');
@@ -258,7 +261,7 @@ const GenerateBilling = async (_parent, args) => {
   //*************** insert all billings at once
   const createdBillings = await Billing.insertMany(allBillingEntries);
 
-  //*************** prepare terms and deposits
+  //*************** prepare terms and deposit
   createdBillings.forEach((createdBilling, index) => {
     const billing = billings[index];
 
@@ -292,7 +295,7 @@ const GenerateBilling = async (_parent, args) => {
     insertedDeposit = await Deposit.insertMany(allDepositEntries);
   }
 
-  // Update Billings with term_ids and deposit_id
+  //*************** Update Billings with term_ids and deposit_id
   const updateQueries = [];
 
   insertedTerms.forEach((term) => {
