@@ -28,6 +28,7 @@ const {
   CreateLookupPipelineStage,
   CreateMatchPipelineStage,
   CreateSortPipelineStage,
+  FindStudentDepositBilling,
 } = require('./billing.helper');
 
 // *************** IMPORT VALIDATOR ***************
@@ -399,8 +400,7 @@ const AddPayment = async (_parent, args) => {
       }
     } else {
       //*************** if billing doesnt hold deposit amount then fetch another student billing
-      const billings = await FindBillingWithLookup({ studentId: billing.student_id }, ['term', 'deposit']);
-      const depositBilling = billings.find((billing) => billing.deposit_id);
+      const depositBilling = await FindStudentDepositBilling(billing.student_id);
       if (!depositBilling) {
         throw new Error('this student doesnt have deposit billing');
       }

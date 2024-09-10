@@ -76,6 +76,37 @@ const FindBillingWithLookup = async (query, lookups = []) => {
 };
 
 /**
+ * Retrieves a billing record for a student that includes deposit information.
+ * @param {string} studentId - The student's ID.
+ * @returns {Promise<Object|null>} - The billing record with deposit info or `null` if not found.
+ */
+const FindStudentDepositBilling = async (studentId) => {
+  try {
+    const pipeline = [
+      {
+        $match: {
+          student_id: ConvertToObjectId(studentId),
+          deposit_id: { $exists: true },
+        },
+      },
+      {
+        $lookup: {
+          from: 'deposits',
+          localField: 'deposit_id',
+          foreignField: '_id',
+          as: 'deposit',
+        },
+      },
+    ];
+
+    const depositBilling = await Billing.aggregate(pipeline);
+    return depositBilling.length === 1 ? depositBilling[0] : null;
+  } catch (error) {
+    throw new Error('Error finding billing record with deposit information');
+  }
+};
+
+/**
  * @param {Array<Object>} termPayments - An array of payment terms. Each object should have:
  * @param {number} termPayments.percentage - The percentage of the total amount for this term.
  * @param {string} termPayments.payment_date - The date for the payment term.
@@ -479,6 +510,7 @@ const CreateSortPipelineStage = (sort) => {
 module.exports = {
   CheckIfStudentHasBillingOrNot,
   FindBillingWithLookup,
+  FindStudentDepositBilling,
   GenerateBillingData,
   PrepareToPayDeposit,
   PrepareToPayTerms,
