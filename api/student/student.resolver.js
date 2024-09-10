@@ -185,12 +185,12 @@ const GetOneStudent = async (_parent, args) => {
  * @param {Object} context.models
  * @returns {Promise<Object>}
  */
-const CreateStudent = async (_parent, args, { models }) => {
+const CreateStudent = async (_parent, args) => {
   try {
     ValidateStudentInput(args.civility, args.first_name, args.last_name);
 
     //*************** create new student
-    const newStudent = new models.student({
+    const newStudent = new Student({
       civility: args.civility,
       first_name: TrimString(args.first_name),
       last_name: TrimString(args.last_name),
