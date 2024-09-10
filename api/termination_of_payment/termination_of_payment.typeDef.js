@@ -10,6 +10,7 @@ const terminationOfpayment = gql`
     termination: Int!
     term_payments: [TermPayment!]!
     additional_cost: Float!
+    status: String
   }
 
   type TermPayment {

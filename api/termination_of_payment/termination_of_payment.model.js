@@ -26,6 +26,11 @@ const terminationOfPaymentSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  status: {
+    type: String,
+    enum: ['active', 'deleted'],
+    default: 'active',
+  },
 });
 
 const TerminationOfPayment = mongoose.model('TerminationOfPayment', terminationOfPaymentSchema, 'termination_of_payments');

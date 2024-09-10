@@ -42,7 +42,7 @@ const GetAllTerminationOfPayments = async (_parent, { filter, sort, pagination }
     ValidatePagination(page, limit);
 
     //*************** base pipeline
-    const pipeline = [];
+    const pipeline = [{ $match: { status: 'active' } }];
 
     //*************** $match stage, only active when filter contain data
     const matchStage = CreatePipelineMatchStage(filter);
@@ -78,8 +78,8 @@ const GetOneTerminationOfPayment = async (_parent, { _id }) => {
   try {
     CheckObjectId(_id);
 
-    //*************** fetcg termintation of payment using id which is sent via parameter
-    const terminationOfPayments = await TerminationOfPayment.findById(_id);
+    //*************** fetch termintation of payment using id which is sent via parameter
+    const terminationOfPayments = await TerminationOfPayment.findOne({ _id: ConvertToObjectId(_id), status: 'active' });
     if (!terminationOfPayments) {
       throw new Error('TerminationOfPayments not found');
     }
@@ -164,7 +164,7 @@ const UpdateTerminationOfPayment = async (_parent, args) => {
     }
 
     //*************** fetch termination of payment first to update it later
-    const termination = await TerminationOfPayment.findById(args._id);
+    const termination = await TerminationOfPayment.findOne({ _id: ConvertToObjectId(args._id), status: 'active' });
     if (!termination) {
       throw new Error('TerminationOfPayment not found');
     }
@@ -224,8 +224,12 @@ const DeleteTerminationOfPayment = async (_parent, args) => {
     }
 
     //*************** delete termination of payment by id
-    const deletedTerminationOfPayment = await TerminationOfPayment.deleteOne({ _id: ConvertToObjectId(args._id) });
-    if (deletedTerminationOfPayment.deletedCount !== 1) {
+    const deletedTerminationOfPayment = await TerminationOfPayment.updateOne(
+      { _id: ConvertToObjectId(args._id), status: 'active' },
+      { status: 'deleted' }
+    );
+
+    if (deletedTerminationOfPayment.nModified !== 1) {
       throw new Error('TerminationOfPayments not found');
     }
 
